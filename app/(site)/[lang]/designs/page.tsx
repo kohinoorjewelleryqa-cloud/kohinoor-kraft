@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import DesignCard from "@/components/DesignCard";
+import { PageHero } from "@/components/Pic";
+import { CATEGORY_PHOTOS, PHOTOS } from "@/lib/photos";
 import { getCatalog } from "@/lib/catalog";
 import type { Lang } from "@/lib/i18n";
 import { href, pick, t } from "@/lib/i18n";
@@ -18,8 +20,9 @@ export default async function Designs({ params, searchParams }: { params: Promis
   const current = categories.find((c) => c.slug === cat);
   const list = current ? designs.filter((x) => x.category === current.slug) : designs;
   return (
+    <>
+    <PageHero p={(current && CATEGORY_PHOTOS[current.slug]) || PHOTOS.worn} lang={lang} title={current ? pick(current, "name", lang) : d.nav.designs} />
     <main className="wrap page">
-      <h1 className="ph1">{current ? pick(current, "name", lang) : d.nav.designs}</h1>
       <nav className="tabs" aria-label={d.nav.designs}>
         <Link href={href(lang, "/designs")} aria-current={!current ? "page" : undefined}>{d.all}</Link>
         {categories.map((c) => <Link key={c.slug} href={`${href(lang, "/designs")}?cat=${c.slug}`} aria-current={current?.slug === c.slug ? "page" : undefined}>{pick(c, "name", lang)}</Link>)}
@@ -27,5 +30,6 @@ export default async function Designs({ params, searchParams }: { params: Promis
       {list.length ? <div className="grid">{list.map((x) => <DesignCard key={x.id} d={x} lang={lang} rates={settings.rates} />)}</div> : <p className="muted">{d.empty}</p>}
       <div className="create-strip"><p>{d.create.text}</p><Link className="btn gold" href={href(lang, "/create")}>{d.nav.create}</Link></div>
     </main>
+    </>
   );
 }

@@ -1,10 +1,13 @@
 import Link from "next/link";
 import HeroName from "@/components/HeroName";
+import NamePendant from "@/components/NamePendant";
+import Pic from "@/components/Pic";
+import { CATEGORY_PHOTOS, PHOTOS } from "@/lib/photos";
 import DesignCard from "@/components/DesignCard";
 import { getCatalog } from "@/lib/catalog";
 import { artSvg, parseArt } from "@/lib/art";
 import { KARATS } from "@/lib/gold";
-import { FAQ } from "@/lib/content";
+import { ABOUT, FAQ } from "@/lib/content";
 import type { Lang } from "@/lib/i18n";
 import { href, pick, t } from "@/lib/i18n";
 
@@ -18,6 +21,7 @@ export default async function Home({ params }: { params: Promise<{ lang: Lang }>
   return (
     <main>
       <section className="hero">
+        <Pic p={PHOTOS.hero} lang={lang} size="full" className="hero-bg" priority alt="" />
         <div className="wrap hero-grid">
           <div className="hero-copy">
             <h1>{d.hero.title}</h1>
@@ -46,9 +50,11 @@ export default async function Home({ params }: { params: Promise<{ lang: Lang }>
         <div className="wrap">
           <div className="sh-row"><h2 className="sh">{d.sections.categories}</h2><Link href={href(lang, "/designs")}>{d.sections.viewAll}</Link></div>
           <div className="cats">
-            {categories.map((c) => { const [type, v] = parseArt(c.art); return (
+            {categories.map((c) => { const [type, v] = parseArt(c.art); const photo = CATEGORY_PHOTOS[c.slug]; return (
               <Link key={c.slug} href={`${href(lang, "/designs")}?cat=${c.slug}`} className="cat">
-                <span className="cat-c" dangerouslySetInnerHTML={{ __html: artSvg(type, "yellow", "none", v) }} />
+                {photo ? <span className="cat-c photo"><Pic p={photo} lang={lang} size="small" ratio={1} alt="" /></span>
+                  : c.slug === "name-jewellery" ? <span className="cat-c name"><NamePendant text={lang === "ar" ? "نور" : "Noor"} /></span>
+                  : <span className="cat-c" dangerouslySetInnerHTML={{ __html: artSvg(type, "yellow", "none", v) }} />}
                 <span>{pick(c, "name", lang)}</span>
               </Link>
             ); })}
@@ -63,6 +69,16 @@ export default async function Home({ params }: { params: Promise<{ lang: Lang }>
         </div>
       </section>
 
+      <section className="craft">
+        <div className="craft-img"><Pic p={PHOTOS.craft} lang={lang} ratio={4 / 3} /></div>
+        <div className="craft-copy">
+          <h2>{ABOUT[lang].title}</h2>
+          <p>{ABOUT[lang].paras[0]}</p>
+          <ul>{d.trust.map(([h, t2]) => <li key={h}><b>{h}</b><span>{t2}</span></li>)}</ul>
+          <Link className="btn gold" href={href(lang, "/about")}>{d.nav.about}</Link>
+        </div>
+      </section>
+
       <section className="block">
         <div className="wrap split">
           <div className="rate-card">
@@ -73,6 +89,7 @@ export default async function Home({ params }: { params: Promise<{ lang: Lang }>
             <Link href={href(lang, "/gold-rate")}>{d.nav.rate}</Link>
           </div>
           <div className="create-card">
+            <Pic p={PHOTOS.sketch} lang={lang} className="cc-bg" alt="" />
             <h2>{d.create.title}</h2>
             <p>{d.create.text}</p>
             <Link className="btn gold" href={href(lang, "/create")}>{d.hero.start}</Link>
