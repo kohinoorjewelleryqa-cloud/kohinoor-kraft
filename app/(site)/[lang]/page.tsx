@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Fragment } from "react";
 import HeroName from "@/components/HeroName";
 import NamePendant from "@/components/NamePendant";
 import Pic from "@/components/Pic";
@@ -24,7 +25,7 @@ export default async function Home({ params }: { params: Promise<{ lang: Lang }>
         <Pic p={PHOTOS.hero} lang={lang} size="full" className="hero-bg" priority alt="" />
         <div className="wrap hero-grid">
           <div className="hero-copy">
-            <h1>{d.hero.title}</h1>
+            <h1 className="hero-title">{d.hero.title.split(" ").map((w, i) => <Fragment key={i}>{i > 0 && " "}<span className="w" style={{ "--i": i } as React.CSSProperties}><span>{w}</span></span></Fragment>)}</h1>
             <p>{d.hero.text}</p>
             <div className="hero-btns">
               <Link className="btn gold" href={href(lang, "/create")}>{d.hero.start}</Link>
@@ -34,6 +35,16 @@ export default async function Home({ params }: { params: Promise<{ lang: Lang }>
           <HeroName lang={lang} labels={{ tryName: d.hero.tryName, placeholder: d.hero.namePlaceholder, start: d.hero.start, font: d.design.font, color: d.design.color }} />
         </div>
       </section>
+
+      <div className="marquee" aria-hidden="true">
+        <div className="mq-track">
+          {[0, 1, 2, 3].map((n) => (
+            <div className="mq-group" key={n}>
+              {[...d.trust.map(([h]) => h), KARATS.map((k) => k[lang]).join(" · "), d.nav.create, d.sections.categories].map((x) => <span key={x}>{x}<i>✦</i></span>)}
+            </div>
+          ))}
+        </div>
+      </div>
 
       <section className="block how">
         <div className="wrap">

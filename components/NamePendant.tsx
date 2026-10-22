@@ -14,7 +14,7 @@ export function fontFor(text: string, fontId?: string) {
  * A name necklace drawn in gold: the name in the chosen style, joined to a fine chain at both ends.
  * Measures the rendered name so the chain always meets its edges, in English or Arabic.
  */
-export default function NamePendant({ text, fontId, color = "yellow", className = "", label, placeholder = "Fatima" }: { text: string; fontId?: string; color?: string; className?: string; label?: string; placeholder?: string }) {
+export default function NamePendant({ text, fontId, color = "yellow", className = "", label, placeholder = "Fatima", shine = false }: { text: string; fontId?: string; color?: string; className?: string; label?: string; placeholder?: string; shine?: boolean }) {
   const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
   const name = (text || "").trim().slice(0, 18) || placeholder;
   const font = fontFor(name, fontId);
@@ -55,6 +55,14 @@ export default function NamePendant({ text, fontId, color = "yellow", className 
           <stop offset=".5" stopColor={sw[1]} />
           <stop offset="1" stopColor={sw[2]} />
         </linearGradient>
+        {shine && (
+          <linearGradient id={`h${uid}`} gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="160" y2="60">
+            <stop offset="0" stopColor="#fff" stopOpacity="0" />
+            <stop offset=".5" stopColor="#FFF8E1" stopOpacity=".95" />
+            <stop offset="1" stopColor="#fff" stopOpacity="0" />
+            <animateTransform attributeName="gradientTransform" type="translate" values={`-200 0; -200 0; ${W + 60} 0`} keyTimes="0;0.45;1" dur="4.2s" repeatCount="indefinite" />
+          </linearGradient>
+        )}
         <filter id={`s${uid}`} x="-10%" y="-30%" width="120%" height="160%">
           <feDropShadow dx="0" dy="5" stdDeviation="5" floodColor="#000" floodOpacity=".28" />
         </filter>
@@ -80,6 +88,14 @@ export default function NamePendant({ text, fontId, color = "yellow", className 
       >
         {name}
       </text>
+      {shine && (
+        <>
+          <text aria-hidden="true" x={W / 2} y={cy + size * 0.3} textAnchor="middle" direction={ar ? "rtl" : "ltr"} style={{ fontFamily: font.family, fontSize: size, fontWeight: font.id === "ruqaa" || font.id === "naskh" ? 700 : 400, mixBlendMode: "screen" }} fill={`url(#h${uid})`}>{name}</text>
+          {[[lx + 6, ty - size * 0.55, 1, 0], [rx - 10, ty + size * 0.42, 0.75, 1.3], [W / 2 + half * 0.35, ty - size * 0.7, 0.6, 2.4], [W / 2 - half * 0.5, ty + size * 0.5, 0.55, 3.1]].map(([x, y, sc, delay], i) => (
+            <g key={i} aria-hidden="true" transform={`translate(${x} ${y}) scale(${sc})`}><path className="spark" style={{ animationDelay: `${delay}s` }} d="M0 -16 C1.6 -3 3 -1.6 16 0 C3 1.6 1.6 3 0 16 C-1.6 3 -3 1.6 -16 0 C-3 -1.6 -1.6 -3 0 -16Z" fill="#FFF6D8" /></g>
+          ))}
+        </>
+      )}
     </svg>
   );
 }

@@ -19,7 +19,7 @@ export default function HeroName({ lang, labels }: { lang: Lang; labels: { tryNa
   const qs = new URLSearchParams({ name: name.trim(), font: current, color }).toString();
   return (
     <div className="hero-name">
-      <NamePendant text={name} placeholder={labels.placeholder} fontId={font} color={color} className="hero-pendant" label={labels.tryName} />
+      <NamePendant text={name} placeholder={labels.placeholder} fontId={font} color={color} className="hero-pendant" label={labels.tryName} shine />
       <div className="hn-controls">
         <label className="sr-only" htmlFor="hn">{labels.tryName}</label>
         <input id="hn" className="hn-input" value={name} maxLength={14} placeholder={labels.tryName} onChange={(e) => setName(e.target.value)} autoComplete="off" />

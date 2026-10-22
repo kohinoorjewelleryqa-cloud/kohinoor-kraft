@@ -468,3 +468,85 @@ h1,h2,h3{font-family:var(--f-head);font-weight:400;line-height:1.15;margin:0}
 .phero p{margin:8px 0 0;max-width:60ch;font-size:17px;opacity:.9}
 .prose-pic{margin:26px 0 8px}
 .prose-pic .pic{aspect-ratio:16/9;border-radius:var(--r);height:auto}
+
+/* ---------- animations (all off when the visitor prefers reduced motion) ---------- */
+@media (prefers-reduced-motion:no-preference){
+  /* hero: words rise in, photo drifts slowly, gold light follows the pointer */
+  .hero-title .w{display:inline-block;overflow:hidden;vertical-align:bottom;padding-bottom:.08em;margin-bottom:-.08em}
+  .hero-title .w>span{display:inline-block;animation:wordUp .9s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i) * 90ms + 120ms)}
+  @keyframes wordUp{from{transform:translateY(105%) rotate(4deg);opacity:0;filter:blur(6px)}}
+  .hero-copy p,.hero-btns{animation:fadeUp .9s cubic-bezier(.2,.8,.2,1) both}
+  .hero-copy p{animation-delay:.55s}.hero-btns{animation-delay:.72s}
+  .hero-name{animation:fadeIn 1.4s ease both .3s}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(22px)}}
+  @keyframes fadeIn{from{opacity:0;transform:scale(.96)}}
+  .hero-bg{animation:kenburns 26s ease-in-out infinite alternate;transform-origin:70% 50%}
+  @keyframes kenburns{from{transform:scale(1.02)}to{transform:scale(1.14) translate(-1.5%,1%)}}
+  .hero::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:0;transition:opacity .5s;background:radial-gradient(420px circle at var(--mx,50%) var(--my,50%),rgba(226,194,122,.22),transparent 65%)}
+  .hero.lit::after{opacity:1}
+  .hero-pendant{animation:sway 7s ease-in-out infinite;transform-origin:50% 0}
+  @keyframes sway{0%,100%{transform:rotate(-1.2deg) translateY(0)}50%{transform:rotate(1.2deg) translateY(4px)}}
+  .spark{transform-box:fill-box;transform-origin:center;animation:twinkle 3.6s ease-in-out infinite;opacity:0}
+  @keyframes twinkle{0%,62%,100%{opacity:0;transform:scale(.2) rotate(0)}74%{opacity:1;transform:scale(1) rotate(45deg)}86%{opacity:0;transform:scale(.3) rotate(90deg)}}
+
+  /* gold sheen sweeps across gold buttons */
+  .btn.gold{position:relative;overflow:hidden;isolation:isolate;transition:transform .2s,box-shadow .2s,background .15s}
+  .btn.gold::after{content:"";position:absolute;inset:-2px;z-index:-1;background:linear-gradient(110deg,transparent 30%,rgba(255,248,225,.75) 50%,transparent 70%);transform:translateX(-120%);animation:sheen 5s ease-in-out infinite}
+  .btn.gold:hover{transform:translateY(-2px);box-shadow:0 10px 24px -10px rgba(140,101,22,.7)}
+  .btn.gold:hover::after{animation-duration:1.2s}
+  @keyframes sheen{0%,70%{transform:translateX(-120%)}100%{transform:translateX(120%)}}
+
+  /* scroll reveals */
+  .motion [data-r]{transition:opacity .8s cubic-bezier(.2,.8,.2,1),transform .8s cubic-bezier(.2,.8,.2,1),filter .8s;transition-delay:var(--d,0ms)}
+  .motion [data-r]:not(.in){opacity:0;transform:translateY(34px);filter:blur(4px)}
+  .motion .cat[data-r]:not(.in){transform:translateY(24px) scale(.6) rotate(-12deg)}
+  .motion .steps li[data-r]:not(.in){transform:translateX(-30px)}
+  [dir="rtl"].motion .steps li[data-r]:not(.in),.motion [dir="rtl"] .steps li[data-r]:not(.in){transform:translateX(30px)}
+  .motion .steps li.in .step-n{animation:ring 1.4s ease-out both;animation-delay:calc(var(--d,0ms) + .3s)}
+  @keyframes ring{0%{box-shadow:0 0 0 0 rgba(185,138,46,.65)}100%{box-shadow:0 0 0 18px rgba(185,138,46,0)}}
+
+  /* craft band: photo wipes open, then drifts as you scroll */
+  .motion .craft-img{clip-path:inset(0 100% 0 0);transition:clip-path 1.3s cubic-bezier(.7,0,.2,1)}
+  [dir="rtl"] .motion .craft-img,.motion[dir="rtl"] .craft-img{clip-path:inset(0 0 0 100%)}
+  .motion .craft-img.in{clip-path:inset(0 0 0 0)}
+  .craft-img .pic{transform:scale(1.18);transition:transform 1.8s cubic-bezier(.2,.8,.2,1)}
+  .craft-img.in .pic,html:not(.motion) .craft-img .pic{transform:scale(1.04)}
+  .craft-img{overflow:hidden}
+
+  /* 3D tilt + gold glare on design cards and category circles */
+  .dimg,.cat-c{transition:transform .5s cubic-bezier(.2,.8,.2,1),box-shadow .5s,border-color .15s;transform:perspective(800px) rotateX(var(--rx,0)) rotateY(var(--ry,0))}
+  .dimg.tilt,.cat-c.tilt{transition:transform .08s linear,box-shadow .3s;box-shadow:0 22px 40px -22px rgba(18,59,47,.55)}
+  .dimg::after,.cat-c::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .3s;background:radial-gradient(circle at var(--gx,50%) var(--gy,50%),rgba(255,244,214,.45),transparent 55%);mix-blend-mode:soft-light}
+  .cat-c{position:relative}
+  .dimg.tilt::after,.cat-c.tilt::after{opacity:1}
+  .dcard .dv-img,.dcard .dv-art,.dcard .dv-name{transition:transform .6s cubic-bezier(.2,.8,.2,1)}
+  .dcard:hover .dv-img,.dcard:hover .dv-art,.dcard:hover .dv-name{transform:scale(1.06)}
+
+  /* page banners: photo settles in, title rises */
+  .phero>.pic{animation:settle 2.2s cubic-bezier(.2,.8,.2,1) both}
+  @keyframes settle{from{transform:scale(1.18);filter:saturate(.6) brightness(.8)}}
+  .phero-in>*{animation:fadeUp 1s cubic-bezier(.2,.8,.2,1) both}
+  .phero-in>p{animation-delay:.18s}
+  .phero h1{background:linear-gradient(100deg,#FFF7E6 40%,var(--gold-soft) 50%,#FFF7E6 60%) 0 0/250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:fadeUp 1s cubic-bezier(.2,.8,.2,1) both,titleShine 6s ease-in-out 1.2s infinite}
+  @keyframes titleShine{0%,60%{background-position:100% 0}100%{background-position:-50% 0}}
+
+  /* gold rates gently glow */
+  .ratebar b{animation:glow 4s ease-in-out infinite}
+  @keyframes glow{50%{text-shadow:0 0 12px rgba(226,194,122,.8)}}
+}
+
+/* gold marquee under the hero */
+.marquee{background:linear-gradient(90deg,var(--gold-deep),var(--gold) 30%,#D9B25E 50%,var(--gold) 70%,var(--gold-deep));color:#1B1206;overflow:hidden;white-space:nowrap;border-block:1px solid rgba(255,255,255,.25)}
+.mq-track{display:flex;width:max-content}
+.mq-group{display:flex;flex-shrink:0}
+.mq-group span{display:inline-flex;align-items:center;gap:22px;padding:13px 0 13px 22px;font:400 17px/1 var(--f-head);letter-spacing:.06em;text-transform:uppercase}
+:root[lang="ar"] .mq-group span{text-transform:none;font-weight:700;letter-spacing:0;padding:11px 22px 11px 0}
+.mq-group i{font-style:normal;color:var(--green);font-size:13px}
+@media (prefers-reduced-motion:no-preference){
+  .mq-track{animation:marquee 70s linear infinite}
+  [dir="rtl"] .mq-track{animation-name:marqueeRtl}
+  .marquee:hover .mq-track{animation-play-state:paused}
+  @keyframes marquee{to{transform:translateX(-50%)}}
+  @keyframes marqueeRtl{to{transform:translateX(50%)}}
+}
+@media (prefers-reduced-motion:reduce){.mq-track{flex-wrap:wrap}.mq-group+.mq-group{display:none}}

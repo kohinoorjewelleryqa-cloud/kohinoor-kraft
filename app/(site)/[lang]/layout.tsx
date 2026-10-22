@@ -4,6 +4,8 @@ import "../../globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import NavProgress from "@/components/NavProgress";
+import Motion from "@/components/Motion";
+import { Suspense } from "react";
 import { getCatalog } from "@/lib/catalog";
 import { LANGS, dirOf, isLang, t } from "@/lib/i18n";
 import { FONTS_URL } from "@/lib/fonts";
@@ -42,6 +44,7 @@ export default async function SiteLayout({ children, params }: { children: React
       </head>
       <body>
         <NavProgress />
+        <Suspense fallback={null}><Motion /></Suspense>
         {demo && <div className="demo-bar">Demo mode: sample designs. Connect Supabase to use real data.</div>}
         <Header lang={lang} settings={settings} />
         <div className="page-in">{children}</div>
