@@ -507,10 +507,10 @@ h1,h2,h3{font-family:var(--f-head);font-weight:400;line-height:1.15;margin:0}
 
   /* craft band: photo wipes open, then drifts as you scroll */
   .motion .craft-img{clip-path:inset(0 100% 0 0);transition:clip-path 1.3s cubic-bezier(.7,0,.2,1)}
-  [dir="rtl"] .motion .craft-img,.motion[dir="rtl"] .craft-img{clip-path:inset(0 0 0 100%)}
-  .motion .craft-img.in{clip-path:inset(0 0 0 0)}
+  .motion[dir="rtl"] .craft-img{clip-path:inset(0 0 0 100%)}
+  .motion .craft.in .craft-img{clip-path:inset(0 0 0 0)}
   .craft-img .pic{transform:scale(1.18);transition:transform 1.8s cubic-bezier(.2,.8,.2,1)}
-  .craft-img.in .pic,html:not(.motion) .craft-img .pic{transform:scale(1.04)}
+  .craft.in .craft-img .pic,html:not(.motion) .craft-img .pic{transform:scale(1.04)}
   .craft-img{overflow:hidden}
 
   /* 3D tilt + gold glare on design cards and category circles */

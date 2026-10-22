@@ -41,7 +41,8 @@ export default function Motion() {
       });
     }, { rootMargin: "0px 0px -8% 0px", threshold: 0.08 });
     els.forEach((el) => io.observe(el));
-    document.querySelectorAll(".craft-img").forEach((el) => io.observe(el));
+    // (The section is watched, not the photo: a fully clipped photo never counts as "on screen".)
+    document.querySelectorAll(".craft").forEach((el) => io.observe(el));
     cleanups.push(() => io.disconnect());
 
     // 2) Gold rates count up when they come into view.
