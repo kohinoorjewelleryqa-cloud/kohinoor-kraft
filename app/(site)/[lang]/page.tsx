@@ -4,10 +4,13 @@ import HeroName from "@/components/HeroName";
 import NamePendant from "@/components/NamePendant";
 import Pic from "@/components/Pic";
 import { CATEGORY_PHOTOS, PHOTOS } from "@/lib/photos";
+import { budgetCounts, budgetParts, designCount } from "@/lib/budget";
+import { stoneCounts, stoneName } from "@/lib/stones";
+import Gem from "@/components/Gem";
 import DesignCard from "@/components/DesignCard";
 import { getCatalog } from "@/lib/catalog";
 import { artSvg, parseArt } from "@/lib/art";
-import { KARATS } from "@/lib/gold";
+import { KARATS, RATE_KEYS, buyRates, qar } from "@/lib/gold";
 import { ABOUT, FAQ } from "@/lib/content";
 import type { Lang } from "@/lib/i18n";
 import { href, pick, t } from "@/lib/i18n";
@@ -17,6 +20,9 @@ export default async function Home({ params }: { params: Promise<{ lang: Lang }>
   const d = t(lang);
   const { categories, designs, portfolio, settings } = await getCatalog();
   const featured = designs.filter((x) => x.is_featured).concat(designs.filter((x) => !x.is_featured)).slice(0, 10);
+  const budgets = budgetCounts(designs, settings.rates);
+  const buy = buyRates(settings.rates);
+  const stones = stoneCounts(designs);
   const num = (n: number) => Math.round(n).toLocaleString(lang === "ar" ? "ar-QA" : "en-US");
 
   return (
@@ -73,6 +79,43 @@ export default async function Home({ params }: { params: Promise<{ lang: Lang }>
         </div>
       </section>
 
+      {budgets.length > 0 && (
+        <section className="block">
+          <div className="wrap">
+            <div className="sh-row"><h2 className="sh">{d.sections.budget}</h2><Link href={href(lang, "/designs")}>{d.sections.viewAll}</Link></div>
+            <div className="budgets">
+              {budgets.map(({ b, count }) => { const p = budgetParts(b, lang); return (
+                <Link key={b.id} className="budget" href={`${href(lang, "/designs")}?budget=${b.id}`}>
+                  <small>{p.pre}</small>
+                  <b className="num">{p.amount}</b>
+                  <span>{p.post}</span>
+                  <em>{designCount(count, lang)}</em>
+                </Link>
+              ); })}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {stones.length > 0 && (
+        <section className="block stones-block">
+          <div className="wrap">
+            <div className="sh-row"><h2 className="sh">{d.sections.stones}</h2><Link href={href(lang, "/create")}>{d.nav.create}</Link></div>
+            <p className="sh-sub">{d.sections.stonesText}</p>
+            <div className="stone-tiles">
+              {stones.map(({ t: st, count, from }) => (
+                <Link key={st.id} className="stone-tile" href={`${href(lang, "/designs")}?stone=${st.id}`} style={{ "--g1": st.colors[1], "--g2": st.colors[2] } as React.CSSProperties}>
+                  <span className="st-gem"><Gem t={st} /></span>
+                  <b>{stoneName(st, lang)}</b>
+                  <p>{lang === "ar" ? st.about_ar : st.about_en}</p>
+                  <small>{designCount(count, lang)} · {d.sections.stoneFrom} <bdi className="num">+{qar(from, lang)}</bdi></small>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       <section className="block">
         <div className="wrap">
           <div className="sh-row"><h2 className="sh">{d.sections.featured}</h2><Link href={href(lang, "/designs")}>{d.sections.viewAll}</Link></div>
@@ -104,6 +147,23 @@ export default async function Home({ params }: { params: Promise<{ lang: Lang }>
             <h2>{d.create.title}</h2>
             <p>{d.create.text}</p>
             <Link className="btn gold" href={href(lang, "/create")}>{d.hero.start}</Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="block">
+        <div className="wrap">
+          <div className="ug-band">
+            <Pic p={PHOTOS.used} lang={lang} className="ug-band-bg" alt="" />
+            <div className="ug-band-copy">
+              <h2>{d.used.homeT}</h2>
+              <p>{d.used.homeP}</p>
+              <Link className="btn gold" href={href(lang, "/used-gold")}>{d.used.homeBtn}</Link>
+            </div>
+            <dl className="ug-band-rates">
+              <dt>{d.used.ratesT}</dt>
+              {RATE_KEYS.map((k) => <dd key={k}><span>{lang === "ar" ? `عيار ${Number(k).toLocaleString("ar-QA")}` : `${k}K`}</span><b className="num"><bdi>{num(buy[k])}</bdi></b></dd>)}
+            </dl>
           </div>
         </div>
       </section>

@@ -12,6 +12,7 @@ export default function Header({ lang, settings }: { lang: Lang; settings: Setti
     [href(lang, "/create"), d.nav.create],
     [href(lang, "/portfolio"), d.nav.portfolio],
     [href(lang, "/gold-rate"), d.nav.rate],
+    [href(lang, "/used-gold"), d.nav.used],
     [href(lang, "/track"), d.nav.track],
   ];
   const num = (n: number) => Math.round(n).toLocaleString(lang === "ar" ? "ar-QA" : "en-US");
@@ -29,7 +30,7 @@ export default function Header({ lang, settings }: { lang: Lang; settings: Setti
       <div className="wrap hdr">
         <MobileMenu lang={lang} items={nav} labels={{ menu: d.menu, close: d.close }} />
         <Link className="brand" href={href(lang)} aria-label={d.brand}>
-          <img src="/logo.webp" alt="" width={36} height={54} />
+          <img src="/logo-mark.webp" alt="" width={41} height={54} />
           <span className="wm"><b>{d.brandShort}</b><span>{d.brandSub}</span></span>
         </Link>
         <nav className="mainnav" aria-label={d.menu}>

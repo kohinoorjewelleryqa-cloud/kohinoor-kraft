@@ -4,7 +4,7 @@ import { useEffect } from "react";
 
 /** Things that rise into view as you scroll, in order (each group staggers its own items). */
 const REVEAL = [
-  ".sh", ".sh-row", ".steps li", ".cat", ".rail > *", ".grid > *", ".rate-card", ".create-card", ".craft-copy > *",
+  ".sh", ".sh-row", ".steps li", ".cat", ".budget", ".stone-tile", ".ug-opt", ".ug-rates > div", ".ug-band", ".rail > *", ".grid > *", ".rate-card", ".create-card", ".craft-copy > *",
   ".faq-short details", ".faq-short > a", ".work figure", ".masonry figure", ".contact-grid > *", ".rates-big > div",
   ".prose > p", ".prose > section", ".prose-pic", ".create-strip", ".tabs", ".dhead", ".panel",
 ].join(",");

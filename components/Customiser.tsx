@@ -3,6 +3,8 @@ import Link from "next/link";
 import { useMemo, useRef, useState, useTransition } from "react";
 import NamePendant, { fontFor } from "./NamePendant";
 import DesignVisual from "./DesignVisual";
+import Gem from "./Gem";
+import { STONE_TYPES, stoneName, stoneTypeOf } from "@/lib/stones";
 import { COLORS, ENGRAVING_FONTS, KARATS, colorAllowed, estimate, isArabicText, qar } from "@/lib/gold";
 import type { Dict, Lang } from "@/lib/i18n";
 import { href, pick } from "@/lib/i18n";
@@ -17,7 +19,7 @@ type Props = {
   categories: Category[];
   rates: Record<string, number>;
   weeks: [number, number];
-  initial?: { name?: string; font?: string; color?: string };
+  initial?: { name?: string; font?: string; color?: string; stone?: string };
 };
 
 const MAX_PHOTOS = 3;
@@ -46,7 +48,7 @@ export default function Customiser({ lang, d, design, categories, rates, weeks, 
   const [color, setColor] = useState(colors.includes(initial?.color ?? "") ? initial!.color! : colors[0]);
   const [size, setSize] = useState("");
   const [weight, setWeight] = useState(design ? Math.round(((design.weight_min + design.weight_max) / 2) * 2) / 2 : 0);
-  const [stone, setStone] = useState("");
+  const [stone, setStone] = useState(initial?.stone ?? "");
   const [text, setText] = useState(initial?.name ?? "");
   const [font, setFont] = useState(initial?.font ?? "");
   const [type, setType] = useState(categories[0]?.slug ?? "");
@@ -218,8 +220,20 @@ export default function Customiser({ lang, d, design, categories, rates, weeks, 
             <legend>{D.stones}</legend>
             <div className="stones">
               <label className={stone === "" ? "on" : ""}><input type="radio" name="stone" checked={stone === ""} onChange={() => setStone("")} />{D.noStones}</label>
-              {design.stones.map((s) => (
-                <label key={s.id} className={stone === s.id ? "on" : ""}><input type="radio" name="stone" checked={stone === s.id} onChange={() => setStone(s.id)} />{pick(s, "name", lang)} <small className="num">+{qar(s.price, lang)}</small></label>
+              {design.stones.map((s) => { const st = stoneTypeOf(s); return (
+                <label key={s.id} className={stone === s.id ? "on" : ""}><input type="radio" name="stone" checked={stone === s.id} onChange={() => setStone(s.id)} />{st && <Gem t={st} />}{pick(s, "name", lang)} <small className="num">+{qar(s.price, lang)}</small></label>
+              ); })}
+            </div>
+          </fieldset>
+        )}
+
+        {!design && (
+          <fieldset className="opt">
+            <legend>{D.stones}</legend>
+            <div className="stones">
+              <label className={stone === "" ? "on" : ""}><input type="radio" name="stone" checked={stone === ""} onChange={() => setStone("")} />{D.noStones}</label>
+              {STONE_TYPES.map((st) => (
+                <label key={st.id} className={stone === st.id ? "on" : ""}><input type="radio" name="stone" checked={stone === st.id} onChange={() => setStone(st.id)} /><Gem t={st} />{stoneName(st, lang)}</label>
               ))}
             </div>
           </fieldset>

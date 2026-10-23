@@ -1,8 +1,9 @@
 "use server";
 import { randomUUID } from "node:crypto";
 import { getCatalog } from "./catalog";
+import { findStone } from "./stones";
 import { serviceClient, supabaseConfigured } from "./supabase-server";
-import { COLORS, KARATS, colorAllowed, estimate, qar, stageLabel } from "./gold";
+import { COLORS, KARATS, RATE_KEYS, buyRates, colorAllowed, estimate, qar, stageLabel } from "./gold";
 import type { Lang } from "./i18n";
 import { t } from "./i18n";
 import type { QuoteDetails } from "./types";
@@ -57,6 +58,7 @@ export async function submitEnquiry(input: EnquiryInput): Promise<EnquiryResult>
   let color = colors.includes(clean(input.color, 10)) ? clean(input.color, 10) : colors[0];
   if (!colorAllowed(color, karat)) color = colors.find((c) => colorAllowed(c, karat)) ?? "yellow";
   const stone = design?.stones.find((s) => s.id === input.stone);
+  const customStone = design ? undefined : findStone(input.stone); // "Create your own": a stone type
   const engraving = design?.engraving || !design ? clean(input.engraving, design?.engraving_max || 40) : "";
 
   // Estimate on the server from today's rates (never trust numbers from the browser).
@@ -77,7 +79,7 @@ export async function submitEnquiry(input: EnquiryInput): Promise<EnquiryResult>
   const lines = (ref: string) => [
     lang === "ar" ? `طلب جديد ${ref}` : `New request ${ref}`,
     `${designName}`,
-    `${kLabel} · ${cLabel}${input.size ? ` · ${clean(input.size, 20)}` : ""}${weight ? ` · ~${weight} g` : ""}${stone ? ` · ${lang === "ar" ? stone.name_ar : stone.name_en}` : ""}`,
+    `${kLabel} · ${cLabel}${input.size ? ` · ${clean(input.size, 20)}` : ""}${weight ? ` · ~${weight} g` : ""}${stone ? ` · ${lang === "ar" ? stone.name_ar : stone.name_en}` : customStone ? ` · ${lang === "ar" ? customStone.ar : customStone.en}` : ""}`,
     engraving ? `${d.design.engraving}: ${engraving}` : "",
     est ? `${d.design.estimate}: ${qar(est.lo, lang)} – ${qar(est.hi, lang)}` : "",
     clean(input.notes, 500),
@@ -95,7 +97,7 @@ export async function submitEnquiry(input: EnquiryInput): Promise<EnquiryResult>
     const { data, error } = await db.from("kraft_enquiries").insert({
       ref, lang, design_id: design && !design.id.startsWith("demo-") ? design.id : null, design_name: designName,
       customer_name: name, phone, email: clean(input.email, 120) || null,
-      karat, color, size: clean(input.size, 20) || null, weight_est: weight, stone: stone ? stone.name_en : null,
+      karat, color, size: clean(input.size, 20) || null, weight_est: weight, stone: stone ? stone.name_en : customStone?.en ?? null,
       engraving_text: engraving || null, engraving_font: clean(input.font, 20) || null, notes: clean(input.notes, 1000) || null,
       reference_images: photos, estimate_lo: est?.lo ?? null, estimate_hi: est?.hi ?? null, rate_at_request: est?.rate ?? null,
     }).select("id").single();
@@ -103,6 +105,66 @@ export async function submitEnquiry(input: EnquiryInput): Promise<EnquiryResult>
     if (error || !data) { console.error("enquiry insert failed", error); return { ok: false, error: d.errors.generic }; }
     await db.from("kraft_events").insert({ enquiry_id: data.id, status: "new" });
     notifyShop(`New Kraft request ${ref}`, lines(ref));
+    return { ok: true, ref, whatsappUrl: `https://wa.me/${settings.whatsapp}?text=${encodeURIComponent(lines(ref))}`, demo: false };
+  }
+  return { ok: false, error: d.errors.generic };
+}
+
+// ---------------------------------------------------------------- used gold
+export type UsedGoldInput = {
+  lang: Lang; mode: "exchange" | "sell";
+  name: string; phone: string;
+  karat?: string; weight?: number; items: string; photos?: string[];
+};
+
+/** A customer wants to exchange or sell old gold: saved with the other requests (marked "Used gold"), then WhatsApp. */
+export async function submitUsedGold(input: UsedGoldInput): Promise<EnquiryResult> {
+  const lang: Lang = input.lang === "ar" ? "ar" : "en";
+  const d = t(lang);
+  const name = clean(input.name, 80);
+  const phone = clean(input.phone, 20).replace(/[^\d+]/g, "");
+  if (!name) return { ok: false, error: d.errors.name };
+  if (digits(phone).length < 8) return { ok: false, error: d.errors.phone };
+  const items = clean(input.items, 600);
+  if (!items) return { ok: false, error: d.used.errItems };
+
+  const { settings } = await getCatalog();
+  const mode = input.mode === "sell" ? "sell" : "exchange";
+  const karat = (RATE_KEYS as readonly string[]).includes(clean(input.karat, 4)) ? clean(input.karat, 4) : null;
+  const weight = Number.isFinite(input.weight) && Number(input.weight) > 0 ? Math.min(5000, Math.round(Number(input.weight) * 100) / 100) : null;
+  const buy = buyRates(settings.rates);
+  const rate = buy[karat ?? "18"];
+  const value = weight ? Math.round(weight * rate) : null;
+  const designName = mode === "sell" ? "Used gold – sell" : "Used gold – exchange";
+  const photos = (input.photos ?? []).filter((p) => /^requests\/\d{4}-\d{2}-\d{2}\/[0-9a-f-]{36}\.(jpg|png|webp|heic|heif)$/.test(p)).slice(0, 3);
+  const U = d.used;
+  const kLabel = karat ? (lang === "ar" ? `عيار ${Number(karat).toLocaleString("ar-QA")}` : `${karat}K`) : U.notSure;
+  const notes = [
+    `${mode === "sell" ? U.sellT : U.exchangeT}`,
+    `${U.items}: ${items}`,
+    `${U.karat}: ${kLabel}`,
+    weight ? `${U.weight}: ${weight}` : "",
+    value ? `${U.value}: ${qar(value, lang)}${karat ? "" : ` (${lang === "ar" ? "محسوبة على عيار ١٨" : "at 18K"})`}` : "",
+  ].filter(Boolean).join("\n");
+
+  const now = new Date();
+  const stamp = `${String(now.getUTCFullYear()).slice(2)}${String(now.getUTCMonth() + 1).padStart(2, "0")}${String(now.getUTCDate()).padStart(2, "0")}`;
+  const lines = (ref: string) => [lang === "ar" ? `ذهب مستعمل ${ref}` : `Used gold ${ref}`, notes, `${name} · ${phone}`].join("\n");
+  if (!supabaseConfigured) {
+    const ref = `KK-${stamp}-DEMO`;
+    return { ok: true, ref, whatsappUrl: `https://wa.me/${settings.whatsapp}?text=${encodeURIComponent(lines(ref))}`, demo: true };
+  }
+  const db = serviceClient();
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const ref = `KK-${stamp}-${Math.floor(10000 + Math.random() * 90000)}`;
+    const { data, error } = await db.from("kraft_enquiries").insert({
+      ref, lang, design_name: designName, customer_name: name, phone,
+      karat, weight_est: weight, notes, reference_images: photos, rate_at_request: rate,
+    }).select("id").single();
+    if (error?.code === "23505") continue;
+    if (error || !data) { console.error("used gold insert failed", error); return { ok: false, error: d.errors.generic }; }
+    await db.from("kraft_events").insert({ enquiry_id: data.id, status: "new" });
+    notifyShop(`${designName}: ${ref}`, lines(ref));
     return { ok: true, ref, whatsappUrl: `https://wa.me/${settings.whatsapp}?text=${encodeURIComponent(lines(ref))}`, demo: false };
   }
   return { ok: false, error: d.errors.generic };

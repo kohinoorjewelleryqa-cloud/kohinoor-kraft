@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import TableLabels from "@/components/admin/TableLabels";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabaseBrowser, browserConfigured } from "@/lib/supabase-browser";
@@ -49,7 +50,7 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
       <div className="adm-top"><button type="button" aria-label="Menu" onClick={() => setOpen(true)}>☰</button><b>Kraft admin</b></div>
       {open && <div className="scrim" onClick={() => setOpen(false)} />}
       <aside className={`adm-side${open ? " open" : ""}`}>
-        <Link className="logo" href="/admin"><img src="/logo.webp" alt="" /><span><b>KOHINOOR KRAFT</b><small>ADMIN</small></span></Link>
+        <Link className="logo" href="/admin"><img src="/logo-mark.webp" alt="" /><span><b>KOHINOOR KRAFT</b><small>ADMIN</small></span></Link>
         {NAV.map(([h, label]) => (
           <Link key={h} className="nav" href={h} aria-current={(h === "/admin" ? path === h : path.startsWith(h)) ? "page" : undefined}>
             {label}{h === "/admin/requests" && newCount > 0 && <span className="badge">{newCount}</span>}
@@ -62,6 +63,7 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
         </div>
       </aside>
       <main className="adm-main">{children}</main>
+      <TableLabels />
     </div>
   );
 }

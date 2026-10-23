@@ -13,6 +13,7 @@ export const PHOTOS = {
   souq: { id: "1654781456542-fdd1683c79c3", en: "A wall of gold jewellery", ar: "جدار من المجوهرات الذهبية" },
   bars: { id: "1610375461246-83df859d849d", en: "Stacked gold bars", ar: "سبائك ذهب مكدّسة" },
   worn: { id: "1616837874254-8d5aaa63e273", en: "A woman wearing a gold necklace", ar: "امرأة ترتدي قلادة ذهبية" },
+  used: { id: "1650455221359-3aebf920bcc5", en: "A tray of gold jewellery", ar: "صينية من المجوهرات الذهبية" },
   store: { id: "1768359666502-306694fa6fcf", en: "Gold bracelets on display in a jewellery shop", ar: "أساور ذهبية معروضة في محل مجوهرات" },
 } satisfies Record<string, Photo>;
 

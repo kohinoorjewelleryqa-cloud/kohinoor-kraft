@@ -12,6 +12,18 @@ export type KaratId = (typeof KARATS)[number]["id"];
 export const RATE_KEYS = ["24", "22", "21", "18"] as const;
 export const DEFAULT_RATES: Record<string, number> = { "24": 480, "22": 440, "21": 420, "18": 360 };
 
+/**
+ * Used-gold buying rates (QAR per gram), kept with the selling rates under keys "u24", "u22", "u21", "u18".
+ * Until the shop sets them, they default to 94% of the selling rate.
+ */
+export const BUY_DEFAULT_PCT = 0.94;
+export function buyRates(rates: Record<string, number>) {
+  return Object.fromEntries(RATE_KEYS.map((k) => {
+    const v = Number(rates[`u${k}`]);
+    return [k, v > 0 ? v : Math.round((rates[k] ?? DEFAULT_RATES[k]) * BUY_DEFAULT_PCT)];
+  })) as Record<string, number>;
+}
+
 export const COLORS = [
   { id: "yellow", en: "Yellow gold", ar: "ذهب أصفر", swatch: ["#FBE7A1", "#D9A93C", "#8C6516"] },
   { id: "rose", en: "Rose gold", ar: "ذهب وردي", swatch: ["#FAD4C0", "#D58C6A", "#8E4E36"] },

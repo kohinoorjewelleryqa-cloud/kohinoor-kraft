@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import { fmtDate, refreshShop } from "@/lib/admin";
-import { DEFAULT_RATES, RATE_KEYS } from "@/lib/gold";
+import { DEFAULT_RATES, RATE_KEYS, buyRates } from "@/lib/gold";
 
 /** Today's gold rates (QAR per gram). Update each morning; all website prices follow them. */
 export default function RatesEditor() {
@@ -13,7 +13,8 @@ export default function RatesEditor() {
   useEffect(() => {
     supabaseBrowser().from("kraft_settings").select("rates,rates_updated_at").eq("id", 1).maybeSingle().then(({ data }) => {
       const r = { ...DEFAULT_RATES, ...(data?.rates ?? {}) };
-      setRates(Object.fromEntries(RATE_KEYS.map((k) => [k, String(r[k] ?? "")])));
+      const b = buyRates(r);
+      setRates({ ...Object.fromEntries(RATE_KEYS.map((k) => [k, String(r[k] ?? "")])), ...Object.fromEntries(RATE_KEYS.map((k) => [`u${k}`, String(b[k])])) });
       setUpdated(data?.rates_updated_at ?? null);
     });
   }, []);
@@ -22,6 +23,13 @@ export default function RatesEditor() {
     const out: Record<string, number> = {};
     for (const k of RATE_KEYS) { const v = Number(rates[k]); if (!(v > 0)) { setMsg({ t: "err", m: `Enter the ${k}K rate.` }); return; } out[k] = v; }
     if (!(out["24"] > out["22"] && out["22"] > out["21"] && out["21"] > out["18"])) { setMsg({ t: "err", m: "Check the rates: 24K should be highest, then 22K, 21K, 18K." }); return; }
+    // Used-gold buying rates (stored with the selling rates as u24, u22, u21, u18).
+    for (const k of RATE_KEYS) {
+      const v = Number(rates[`u${k}`]);
+      if (!(v > 0)) { setMsg({ t: "err", m: `Enter the used-gold buying rate for ${k}K.` }); return; }
+      if (v > out[k]) { setMsg({ t: "err", m: `The ${k}K buying rate should not be higher than the ${k}K selling rate.` }); return; }
+      out[`u${k}`] = v;
+    }
     setBusy(true);
     const now = new Date().toISOString();
     const { error } = await supabaseBrowser().from("kraft_settings").update({ rates: out, rates_updated_at: now }).eq("id", 1);
@@ -36,6 +44,13 @@ export default function RatesEditor() {
       <div className="rates4">
         {RATE_KEYS.map((k) => (
           <div className="field" key={k}><label htmlFor={`r${k}`}>{k}K</label><input id={`r${k}`} inputMode="decimal" value={rates[k] ?? ""} onChange={(e) => setRates({ ...rates, [k]: e.target.value.replace(/[^\d.]/g, "") })} /></div>
+        ))}
+      </div>
+      <h2 style={{ marginTop: 18 }}>Used gold buying rates (QAR per gram)</h2>
+      <p className="sub" style={{ margin: "0 0 8px" }}>What you pay customers for old gold. Shown on the Used gold page and its value calculator.</p>
+      <div className="rates4">
+        {RATE_KEYS.map((k) => (
+          <div className="field" key={k}><label htmlFor={`u${k}`}>{k}K</label><input id={`u${k}`} inputMode="decimal" value={rates[`u${k}`] ?? ""} onChange={(e) => setRates({ ...rates, [`u${k}`]: e.target.value.replace(/[^\d.]/g, "") })} /></div>
         ))}
       </div>
       <p className="sub" style={{ margin: "10px 0" }}>{updated ? `Last updated ${fmtDate(updated)}` : "Not updated yet."} 24K is shown on the gold-rate page for reference.</p>

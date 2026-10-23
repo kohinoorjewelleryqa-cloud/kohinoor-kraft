@@ -22,7 +22,7 @@ export default function AdminLogin() {
   return (
     <div className="login-wrap">
       <form className="login-card" onSubmit={submit}>
-        <img src="/logo.webp" alt="Kohinoor Kraft Jewellery" />
+        <img src="/logo-full.webp" alt="Kohinoor Kraft Jewellery" />
         <div style={{ textAlign: "center" }}><h1 style={{ font: "400 26px/1.2 var(--f-display)", margin: 0 }}>Kraft admin</h1><p style={{ color: "var(--muted)", margin: "4px 0 0", fontSize: 14 }}>Sign in to manage requests, designs and gold rates. Same login as the silver store.</p></div>
         {!browserConfigured && <div className="notice info">Supabase isn&apos;t connected yet. Add the Supabase keys in Vercel first (see README).</div>}
         <div className="field"><label htmlFor="em">Email</label><input id="em" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="username" /></div>

@@ -28,7 +28,8 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
     alternates: { languages: { en: "/en", ar: "/ar" } },
   };
 }
-export const viewport: Viewport = { width: "device-width", initialScale: 1, viewportFit: "cover", themeColor: "#123B2F" };
+// No pinch or double-tap zoom on phones (the layout is built to fit every screen).
+export const viewport: Viewport = { width: "device-width", initialScale: 1, maximumScale: 1, userScalable: false, viewportFit: "cover", themeColor: "#123B2F" };
 
 export default async function SiteLayout({ children, params }: { children: React.ReactNode; params: Promise<{ lang: string }> }) {
   const { lang } = await params;

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { optionFor } from "@/lib/stones";
 import Customiser from "@/components/Customiser";
 import { getCatalog, getDesign } from "@/lib/catalog";
 import { KARATS, qar } from "@/lib/gold";
@@ -25,7 +26,7 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: Lan
   };
 }
 
-export default async function DesignPage({ params, searchParams }: { params: Promise<{ lang: Lang; slug: string }>; searchParams: Promise<{ name?: string; font?: string; color?: string }> }) {
+export default async function DesignPage({ params, searchParams }: { params: Promise<{ lang: Lang; slug: string }>; searchParams: Promise<{ name?: string; font?: string; color?: string; stone?: string }> }) {
   const { lang, slug } = await params;
   const sp = await searchParams;
   const design = await getDesign(slug);
@@ -52,7 +53,7 @@ export default async function DesignPage({ params, searchParams }: { params: Pro
           <li>{d.design.weight}: <bdi className="num">{n(design.weight_min)}–{n(design.weight_max)} {d.design.grams}</bdi></li>
         </ul>
       </header>
-      <Customiser lang={lang} d={d} design={design} categories={categories} rates={settings.rates} weeks={weeks} initial={{ name: sp.name?.slice(0, 20), font: sp.font, color: sp.color }} />
+      <Customiser lang={lang} d={d} design={design} categories={categories} rates={settings.rates} weeks={weeks} initial={{ name: sp.name?.slice(0, 20), font: sp.font, color: sp.color, stone: optionFor(design, sp.stone)?.id }} />
     </main>
   );
 }

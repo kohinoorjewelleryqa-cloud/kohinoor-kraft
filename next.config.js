@@ -8,7 +8,7 @@ const nextConfig = {
       { source: "/", destination: "/en", permanent: false },
       { source: "/favicon.ico", destination: "/icon.png", permanent: true },
       // Any other address without a language goes to the English version of it (so missing pages show a proper "not found").
-      { source: "/:first((?!(?:en|ar|admin|api|_next)(?:/|$)|(?:icon\\.png|apple-icon\\.png|robots\\.txt|sitemap\\.xml|logo\\.webp)$|opengraph-image)[^/]+)/:rest*", destination: "/en/:first/:rest*", permanent: false },
+      { source: "/:first((?!(?:en|ar|admin|api|_next)(?:/|$)|[^/]+\\.(?:png|jpe?g|webp|svg|ico|txt|xml|json)$|opengraph-image)[^/]+)/:rest*", destination: "/en/:first/:rest*", permanent: false },
     ];
   },
 };
