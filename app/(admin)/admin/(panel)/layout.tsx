@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { supabaseBrowser, browserConfigured } from "@/lib/supabase-browser";
 
 const NAV: [string, string][] = [
-  ["/admin", "Dashboard"], ["/admin/requests", "Requests & orders"], ["/admin/designs", "Designs"], ["/admin/portfolio", "Our work (photos)"], ["/admin/settings", "Gold rates & settings"],
+  ["/admin", "Dashboard"], ["/admin/requests", "Requests & orders"], ["/admin/designs", "Designs"], ["/admin/stones", "Stones"], ["/admin/portfolio", "Our work (photos)"], ["/admin/settings", "Gold rates & settings"],
 ];
 
 export default function PanelLayout({ children }: { children: React.ReactNode }) {

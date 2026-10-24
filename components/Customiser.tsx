@@ -4,7 +4,9 @@ import { useMemo, useRef, useState, useTransition } from "react";
 import NamePendant, { fontFor } from "./NamePendant";
 import DesignVisual from "./DesignVisual";
 import Gem from "./Gem";
-import { STONE_TYPES, stoneName, stoneTypeOf } from "@/lib/stones";
+import { gemShades, stoneLook, stoneName, stoneTypeOf, type StoneType } from "@/lib/stones";
+import Ring3D from "./ring/Ring3D";
+import { RING_STYLES, metalColor, ringStylesFor, type RingStyle } from "@/lib/ring3d";
 import { COLORS, ENGRAVING_FONTS, KARATS, colorAllowed, estimate, isArabicText, qar } from "@/lib/gold";
 import type { Dict, Lang } from "@/lib/i18n";
 import { href, pick } from "@/lib/i18n";
@@ -20,6 +22,7 @@ type Props = {
   rates: Record<string, number>;
   weeks: [number, number];
   initial?: { name?: string; font?: string; color?: string; stone?: string };
+  stones: StoneType[];
 };
 
 const MAX_PHOTOS = 3;
@@ -40,7 +43,7 @@ async function prepare(file: File): Promise<Blob> {
   } catch { return file; }
 }
 
-export default function Customiser({ lang, d, design, categories, rates, weeks, initial }: Props) {
+export default function Customiser({ lang, d, design, categories, rates, weeks, initial, stones }: Props) {
   const D = d.design;
   const karats = design?.karats?.length ? design.karats : KARATS.map((k) => k.id as string);
   const colors = design?.colors?.length ? design.colors : COLORS.map((c) => c.id as string);
@@ -49,6 +52,8 @@ export default function Customiser({ lang, d, design, categories, rates, weeks, 
   const [size, setSize] = useState("");
   const [weight, setWeight] = useState(design ? Math.round(((design.weight_min + design.weight_max) / 2) * 2) / 2 : 0);
   const [stone, setStone] = useState(initial?.stone ?? "");
+  const ringStyles = ringStylesFor(design?.slug);
+  const [ringStyle, setRingStyle] = useState<RingStyle>(ringStyles?.[0] ?? "round");
   const [text, setText] = useState(initial?.name ?? "");
   const [font, setFont] = useState(initial?.font ?? "");
   const [type, setType] = useState(categories[0]?.slug ?? "");
@@ -61,8 +66,8 @@ export default function Customiser({ lang, d, design, categories, rates, weeks, 
 
   const effColor = colorAllowed(color, karat) ? color : colors.find((c) => colorAllowed(c, karat)) ?? "yellow";
   const stoneOpt = design?.stones.find((s) => s.id === stone);
-  const est = useMemo(() => design ? estimate({ rates, karat, weightMin: weight, weightMax: weight, makingPerG: design.making_per_g, stonePrice: stoneOpt?.price }) : null, [design, rates, karat, weight, stoneOpt]);
-  const range = useMemo(() => design ? estimate({ rates, karat, weightMin: design.weight_min, weightMax: design.weight_max, makingPerG: design.making_per_g, stonePrice: stoneOpt?.price }) : null, [design, rates, karat, stoneOpt]);
+  const est = useMemo(() => design ? estimate({ rates, karat, weightMin: weight, weightMax: weight, stonePrice: stoneOpt?.price }) : null, [design, rates, karat, weight, stoneOpt]);
+  const range = useMemo(() => design ? estimate({ rates, karat, weightMin: design.weight_min, weightMax: design.weight_max, stonePrice: stoneOpt?.price }) : null, [design, rates, karat, stoneOpt]);
   const engravable = !design || design.engraving;
   const showPendant = engravable && (design ? ["name-jewellery", "pendants"].includes(design.category) : type === "name-jewellery" || text.trim().length > 0);
   const fonts = isArabicText(text || d.hero.namePlaceholder) ? ENGRAVING_FONTS.ar : ENGRAVING_FONTS.en;
@@ -106,7 +111,7 @@ export default function Customiser({ lang, d, design, categories, rates, weeks, 
         }
       }
       // 2) send the request
-      const notes = [v("budget") && `${d.create.budget}: ${v("budget")}`, v("notes")].filter(Boolean).join("\n");
+      const notes = [ringStyles && ringStyles.length > 1 && `${D.ringStyle}: ${RING_STYLES[ringStyle][lang]}`, v("budget") && `${d.create.budget}: ${v("budget")}`, v("notes")].filter(Boolean).join("\n");
       const r = await submitEnquiry({
         lang, designSlug: design?.slug, customType: design ? undefined : categories.find((c) => c.slug === type)?.[lang === "ar" ? "name_ar" : "name_en"],
         name: v("name"), phone: v("phone"), email: v("email"),
@@ -141,7 +146,29 @@ export default function Customiser({ lang, d, design, categories, rates, weeks, 
     <div className="cz">
       <div className="cz-visual">
         <div className="cz-stage">
-          {showPendant ? (
+          {design && ringStyles ? (
+            <>
+              <Ring3D style={ringStyle} metal={metalColor(effColor, karat)} stone={stoneOpt ? stoneLook(stoneTypeOf(stoneOpt, stones)) : undefined} hint={D.drag}>
+                <DesignVisual d={design} color={effColor} alt={designName} priority lang={lang} />
+              </Ring3D>
+              {(ringStyles.length > 1 || design.stones.length > 0) && (
+                <div className="ring-bar">
+                  {ringStyles.length > 1 && (
+                    <div className="rb-styles" role="radiogroup" aria-label={D.ringStyle}>
+                      {ringStyles.map((rs) => <button key={rs} type="button" role="radio" aria-checked={ringStyle === rs} onClick={() => setRingStyle(rs)}><RingIcon s={rs} />{RING_STYLES[rs][lang]}</button>)}
+                    </div>
+                  )}
+                  {design.stones.length > 0 && (
+                    <div className="rb-stones" role="radiogroup" aria-label={D.stoneColour}>
+                      {design.stones.map((s) => { const t = stoneTypeOf(s, stones); const c = t ? gemShades(t.color)[1] : "#EEF2F7"; return (
+                        <button key={s.id} type="button" role="radio" aria-checked={stone === s.id} title={pick(s, "name", lang)} aria-label={pick(s, "name", lang)} onClick={() => setStone(stone === s.id ? "" : s.id)} style={{ "--c": c } as React.CSSProperties} />
+                      ); })}
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
+          ) : showPendant ? (
             <NamePendant text={text} placeholder={d.hero.namePlaceholder} fontId={font} color={effColor} label={D.preview} className="cz-pendant" />
           ) : design ? (
             <DesignVisual d={design} color={effColor} alt={designName} priority lang={lang} />
@@ -220,7 +247,7 @@ export default function Customiser({ lang, d, design, categories, rates, weeks, 
             <legend>{D.stones}</legend>
             <div className="stones">
               <label className={stone === "" ? "on" : ""}><input type="radio" name="stone" checked={stone === ""} onChange={() => setStone("")} />{D.noStones}</label>
-              {design.stones.map((s) => { const st = stoneTypeOf(s); return (
+              {design.stones.map((s) => { const st = stoneTypeOf(s, stones); return (
                 <label key={s.id} className={stone === s.id ? "on" : ""}><input type="radio" name="stone" checked={stone === s.id} onChange={() => setStone(s.id)} />{st && <Gem t={st} />}{pick(s, "name", lang)} <small className="num">+{qar(s.price, lang)}</small></label>
               ); })}
             </div>
@@ -232,7 +259,7 @@ export default function Customiser({ lang, d, design, categories, rates, weeks, 
             <legend>{D.stones}</legend>
             <div className="stones">
               <label className={stone === "" ? "on" : ""}><input type="radio" name="stone" checked={stone === ""} onChange={() => setStone("")} />{D.noStones}</label>
-              {STONE_TYPES.map((st) => (
+              {stones.map((st) => (
                 <label key={st.id} className={stone === st.id ? "on" : ""}><input type="radio" name="stone" checked={stone === st.id} onChange={() => setStone(st.id)} /><Gem t={st} />{stoneName(st, lang)}</label>
               ))}
             </div>
@@ -285,4 +312,10 @@ export default function Customiser({ lang, d, design, categories, rates, weeks, 
       </form>
     </div>
   );
+}
+
+/** Small outline icons for the ring styles. */
+function RingIcon({ s }: { s: RingStyle }) {
+  const stone = s === "round" ? <circle cx="12" cy="8" r="3.4" /> : s === "halo" ? <><circle cx="12" cy="8" r="2.3" /><circle cx="12" cy="8" r="4" strokeDasharray="1.2 1.2" /></> : s === "oval" ? <ellipse cx="12" cy="8" rx="2.6" ry="3.8" /> : s === "emerald" ? <path d="M10 4h4l1.5 1.5v5L14 12h-4l-1.5-1.5v-5z" /> : s === "eastwest" ? <path d="M8 6h8l1.5 1.5v1L16 10H8L6.5 8.5v-1z" /> : s === "princess" ? <rect x="9" y="5" width="6" height="6" /> : null;
+  return <svg className="ri" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.4"><ellipse cx="12" cy="16" rx={s === "band" ? 7 : 6.5} ry={s === "band" ? 5.5 : 4.5} strokeWidth={s === "band" ? 2.2 : 1.4} />{stone}</svg>;
 }

@@ -408,7 +408,8 @@ h1,h2,h3{font-family:var(--f-head);font-weight:400;line-height:1.15;margin:0}
 .kv dd{margin:0;font-weight:500}
 .two-col{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
 .qtotal{font:400 26px/1.1 "Marcellus",serif;color:var(--green)}
-.stone-row{display:grid;grid-template-columns:1fr 1fr 110px 36px;gap:8px;align-items:center}
+.stone-row{display:grid;grid-template-columns:150px 1fr 1fr 110px 36px;gap:8px;align-items:center}
+.stone-row select{border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-width:0;background:var(--surface);font:inherit}
 .stone-row input{border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-width:0}
 .stone-row button{border:1px solid var(--line);background:var(--surface);border-radius:8px;height:38px;cursor:pointer}
 @media (max-width:900px){
@@ -677,3 +678,48 @@ h1,h2,h3{font-family:var(--f-head);font-weight:400;line-height:1.15;margin:0}
 @media (max-width:900px){input,select,textarea{font-size:16px!important}}
 html,body{overflow-x:clip}
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%;touch-action:manipulation}
+
+/* ---------- live 3D ring ---------- */
+.ring3d{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,#F7F5F1,#EEEBE5 70%)}
+.ring3d-fallback{position:absolute;inset:0;display:grid;place-items:center;transition:opacity .5s}
+.ring3d-fallback>*{width:100%;height:100%}
+.ring3d.ready .ring3d-fallback{opacity:0;pointer-events:none}
+.ring3d-canvas{position:absolute;inset:0;opacity:0;transition:opacity .6s;cursor:grab;touch-action:pan-y}
+.ring3d-canvas:active{cursor:grabbing}
+.ring3d.ready .ring3d-canvas{opacity:1}
+.ring3d-canvas canvas{display:block}
+.ring3d-hint{position:absolute;top:10px;inset-inline-start:10px;display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.88);color:var(--ink);font-size:12.5px;font-weight:600;padding:6px 12px;border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,.08);pointer-events:none;white-space:nowrap;animation:hintPulse 2.4s ease-in-out infinite}
+.ring3d-hint svg{width:16px;height:16px}
+@keyframes hintPulse{50%{transform:translateX(4px)}}
+.ring-bar{position:absolute;left:10px;right:10px;bottom:10px;z-index:2;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;pointer-events:none}
+.rb-styles,.rb-stones{pointer-events:auto;display:flex;gap:4px;padding:4px;background:rgba(255,255,255,.9);border-radius:999px;box-shadow:0 6px 18px rgba(0,0,0,.1);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.rb-styles{overflow-x:auto;scrollbar-width:none;max-width:100%}
+.rb-styles::-webkit-scrollbar{display:none}
+.rb-styles button{display:inline-flex;align-items:center;gap:5px;border:0;background:none;border-radius:999px;padding:6px 11px 6px 8px;font:500 12.5px/1 var(--f-body);color:var(--ink);cursor:pointer;white-space:nowrap}
+.rb-styles button[aria-checked="true"]{background:var(--green);color:#fff}
+.rb-styles .ri{width:18px;height:18px;flex-shrink:0}
+.rb-stones button{width:26px;height:26px;border-radius:50%;border:2px solid #fff;padding:0;cursor:pointer;background:radial-gradient(circle at 35% 30%,#fff 0 12%,var(--c) 45%,color-mix(in srgb,var(--c) 70%,#000));box-shadow:0 0 0 1px rgba(0,0,0,.12)}
+.rb-stones button[aria-checked="true"]{box-shadow:0 0 0 2px var(--gold)}
+@media (max-width:520px){.ring-bar{left:6px;right:6px;bottom:6px;gap:6px}.rb-styles button{font-size:12px;padding:5px 9px 5px 6px}.rb-stones button{width:22px;height:22px}}
+@media (prefers-reduced-motion:reduce){.ring3d-hint{animation:none}}
+
+/* admin: stones */
+.stone-new{display:grid;grid-template-columns:56px 1fr 1fr 90px 1.2fr auto;gap:12px;align-items:end}
+.stone-list{display:grid;gap:12px}
+.stone-card{display:grid;gap:12px}
+.sc-top{display:grid;grid-template-columns:56px 1fr 1fr 90px 1.2fr;gap:12px;align-items:end}
+.sc-about{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sc-bot{display:flex;flex-wrap:wrap;align-items:end;gap:12px}
+.sc-check{display:inline-flex;align-items:center;gap:6px;font-size:14px;padding-bottom:10px}
+.sc-id{font-size:12px;color:var(--muted);margin-inline-end:auto;padding-bottom:10px}
+.sw-prev{width:52px;height:52px;display:grid;place-items:center;background:radial-gradient(circle,#fff,var(--tile));border-radius:12px;border:1px solid var(--line)}
+.sw-prev .gem{width:42px;height:42px}
+.adm input[type="color"]{padding:2px;height:42px;width:100%;cursor:pointer}
+@media (max-width:900px){.stone-new,.sc-top{grid-template-columns:56px 1fr}.stone-new .btn{grid-column:1/-1}.sc-about{grid-template-columns:1fr}.stone-row{grid-template-columns:1fr 1fr}}
+
+/* admin: making charge by weight */
+.mk-tiers{display:grid;gap:8px;margin-bottom:6px}
+.mk-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:14px}
+.mk-row input{width:84px;border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--bg);font:inherit}
+.mk-row b{color:var(--muted);font-weight:400}
+.mk-row span:first-child{min-width:120px}

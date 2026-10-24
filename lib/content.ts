@@ -4,7 +4,7 @@ import type { Lang } from "./i18n";
 
 export const FAQ: Record<Lang, [string, string][]> = {
   en: [
-    ["How is the price calculated?", "Gold weight × today's gold rate for the karat you choose, plus the making charge per gram shown on each design, plus any stones. The website shows an estimate; your quote confirms the exact price."],
+    ["How is the price calculated?", "Prices follow today's gold rate for the karat you choose and the weight of the piece, plus any stones. Workmanship is already included, so there are no extra charges on top. The website shows an estimate; your quote confirms the exact price, which can vary with the design and the work involved."],
     ["How long does it take?", "Most pieces take 2 to 4 weeks after you approve the design and pay the advance. Bridal sets can take longer. Your quote shows the date."],
     ["Do I need to pay in advance?", "Yes. An advance confirms your order and covers the gold. The rest is paid when you collect or receive your piece."],
     ["Can I see the design before you make it?", "Yes. We send you a drawing or render to approve on your tracking page. We only start once you approve it."],
@@ -14,7 +14,7 @@ export const FAQ: Record<Lang, [string, string][]> = {
     ["Can I return a custom piece?", "Custom pieces are made only for you, so they can't be returned or exchanged unless there's a fault. Please read our Terms."],
   ],
   ar: [
-    ["كيف يُحسب السعر؟", "وزن الذهب × سعر الذهب اليوم للعيار الذي تختاره، مضافًا إليه أجرة الصياغة لكل غرام الموضحة في كل تصميم، وثمن الأحجار إن وجدت. يعرض الموقع سعرًا تقديريًا، ويؤكد عرض السعر المبلغ النهائي."],
+    ["كيف يُحسب السعر؟", "يعتمد السعر على سعر الذهب اليوم للعيار الذي تختاره ووزن القطعة، مع ثمن الأحجار إن وجدت. أجرة الصياغة مشمولة في السعر، فلا رسوم إضافية. يعرض الموقع سعرًا تقديريًا، ويؤكد عرض السعر المبلغ النهائي الذي قد يختلف حسب التصميم والعمل المطلوب."],
     ["كم يستغرق التنفيذ؟", "تستغرق معظم القطع من أسبوعين إلى أربعة أسابيع بعد الموافقة على التصميم ودفع الدفعة المقدمة. قد تستغرق أطقم العرائس وقتًا أطول. يوضح عرض السعر الموعد."],
     ["هل يجب الدفع مقدمًا؟", "نعم. تؤكد الدفعة المقدمة طلبك وتغطي قيمة الذهب، ويُدفع الباقي عند الاستلام."],
     ["هل أرى التصميم قبل التنفيذ؟", "نعم. نرسل لك رسمًا أو صورة للتصميم لتوافق عليه في صفحة تتبّع الطلب، ولا نبدأ إلا بعد موافقتك."],
@@ -30,7 +30,7 @@ export const ABOUT: Record<Lang, { title: string; paras: string[] }> = {
     title: "About Kohinoor Kraft Jewellery",
     paras: [
       "Kohinoor Kraft Jewellery makes custom gold jewellery in Doha: name necklaces, rings, bangles, pendants and bridal sets, designed with each customer and handcrafted by our goldsmiths.",
-      "We are part of Kohinoor Jewellery, at the Gold Center in the Old Gold Souq. Every piece is made in hallmarked 22K, 21K or 18K gold, priced on the day's gold rate with the making charge shown clearly.",
+      "We are part of Kohinoor Jewellery, at the Gold Center in the Old Gold Souq. Every piece is made in hallmarked 22K, 21K or 18K gold, priced on the day's gold rate with workmanship included in one clear price.",
       "You approve the design before we start, and you can follow your order online from request to collection.",
     ],
   },
@@ -38,7 +38,7 @@ export const ABOUT: Record<Lang, { title: string; paras: string[] }> = {
     title: "عن كوهينور كرافت للمجوهرات",
     paras: [
       "تصنع كوهينور كرافت للمجوهرات الذهب حسب الطلب في الدوحة: قلائد بالأسماء، خواتم، بناجر، دلايات وأطقم عرائس، نصممها مع كل عميل ويصوغها صاغتنا يدويًا.",
-      "نحن جزء من كوهينور للمجوهرات في جولد سنتر بسوق الذهب القديم. تُصنع كل قطعة من ذهب مدموغ عيار ٢٢ أو ٢١ أو ١٨، بسعر الذهب اليومي مع أجرة صياغة واضحة.",
+      "نحن جزء من كوهينور للمجوهرات في جولد سنتر بسوق الذهب القديم. تُصنع كل قطعة من ذهب مدموغ عيار ٢٢ أو ٢١ أو ١٨، بسعر الذهب اليومي وبسعر واحد واضح يشمل الصياغة.",
       "توافق على التصميم قبل أن نبدأ، ويمكنك متابعة طلبك عبر الإنترنت من لحظة الطلب حتى الاستلام.",
     ],
   },
@@ -50,7 +50,7 @@ export function terms(lang: Lang, c: { legalName: string; cr: string; advance: n
   if (lang === "ar") return [
     { h: "١. من نحن", p: `يدير هذا الموقع ${c.legalName}، شركة ذات مسؤولية محدودة مسجلة في دولة قطر بسجل تجاري رقم ${c.cr}، وتعمل باسم "كوهينور كرافت للمجوهرات". باستخدامك الموقع أو تقديم طلب، فإنك توافق على هذه الشروط.` },
     { h: "٢. القطع حسب الطلب", li: ["تُصنع كل قطعة خصيصًا لك وفق الخيارات والتصميم الذي توافق عليه.", "الصور والمعاينات على الموقع توضيحية. قد تختلف القطعة المصنوعة يدويًا اختلافًا طفيفًا في الشكل والحجم.", "الذهب مدموغ بعياره: ٢٢ (٩١٦) أو ٢١ (٨٧٥) أو ١٨ (٧٥٠)."] },
-    { h: "٣. الأسعار وعرض السعر", li: ["السعر = الوزن × سعر الذهب للعيار المختار + أجرة الصياغة لكل غرام + ثمن الأحجار. جميع الأسعار بالريال القطري.", "السعر المعروض على الموقع تقديري. نرسل لك عرض سعر يتضمن الإجمالي والدفعة المقدمة وموعد التسليم.", "يُحتسب السعر النهائي حسب الوزن الفعلي للقطعة المنجزة، وقد يختلف الوزن عن عرض السعر بنسبة تصل إلى ٥٪.", "يُثبَّت سعر الذهب في عرض السعر عند استلام الدفعة المقدمة."] },
+    { h: "٣. الأسعار وعرض السعر", li: ["يعتمد السعر على الوزن وسعر الذهب للعيار المختار وثمن الأحجار، ويشمل أجرة الصياغة. قد يختلف السعر حسب التصميم والعمل المطلوب. جميع الأسعار بالريال القطري.", "السعر المعروض على الموقع تقديري. نرسل لك عرض سعر يتضمن الإجمالي والدفعة المقدمة وموعد التسليم.", "يُحتسب السعر النهائي حسب الوزن الفعلي للقطعة المنجزة، وقد يختلف الوزن عن عرض السعر بنسبة تصل إلى ٥٪.", "يُثبَّت سعر الذهب في عرض السعر عند استلام الدفعة المقدمة."] },
     { h: "٤. الدفعة المقدمة والدفع", li: [`يُؤكَّد الطلب عند دفع دفعة مقدمة، عادةً ${c.advance}٪ من عرض السعر.`, "يُدفع المبلغ المتبقي نقدًا أو بالبطاقة عند الاستلام أو التوصيل.", "لا نجمع بيانات البطاقات على هذا الموقع."] },
     { h: "٥. الموافقة على التصميم والتعديلات", li: ["نرسل لك رسمًا أو صورة للتصميم للموافقة عليه، ولا تبدأ الصياغة إلا بعد موافقتك.", "يمكن طلب تعديلات قبل الموافقة. أما التعديلات بعد بدء الصياغة فقد تتطلب تكلفة ووقتًا إضافيين."] },
     { h: "٦. الإلغاء والاسترجاع", li: ["يمكنك إلغاء الطلب قبل الموافقة على التصميم مع استرداد الدفعة المقدمة كاملة.", "بعد الموافقة على التصميم وبدء الصياغة، لا يمكن استرداد الدفعة المقدمة لأن الذهب يُخصص لقطعتك.", "لا يمكن إرجاع القطع المصنوعة حسب الطلب أو استبدالها إلا في حال وجود عيب في الصنع.", "لا يؤثر أي مما سبق على حقوقك بموجب قانون حماية المستهلك القطري رقم (٨) لسنة ٢٠٠٨."] },
@@ -62,7 +62,7 @@ export function terms(lang: Lang, c: { legalName: string; cr: string; advance: n
   return [
     { h: "1. Who we are", p: `This website is run by ${c.legalName}, a limited liability company (W.L.L.) registered in the State of Qatar under Commercial Registration No. ${c.cr}, trading as "Kohinoor Kraft Jewellery". By using the website or placing a request, you agree to these terms.` },
     { h: "2. Custom-made pieces", li: ["Every piece is made specially for you, to the options and design you approve.", "Photos and previews on the website are illustrations. Handmade pieces may differ slightly in shape and size.", "Gold is hallmarked with its karat: 22K (916), 21K (875) or 18K (750)."] },
-    { h: "3. Prices and quotes", li: ["Price = weight × the gold rate for the chosen karat + the making charge per gram + any stones. All prices are in Qatari Riyals (QAR).", "Prices shown on the website are estimates. We send you a quote with the total, the advance and a ready-by date.", "The final price is based on the actual weight of the finished piece, which may differ from the quote by up to 5%.", "The gold rate in your quote is fixed once we receive your advance."] },
+    { h: "3. Prices and quotes", li: ["Prices are based on the weight, the gold rate for the chosen karat and any stones, and include workmanship. The price may vary with the design and the work involved. All prices are in Qatari Riyals (QAR).", "Prices shown on the website are estimates. We send you a quote with the total, the advance and a ready-by date.", "The final price is based on the actual weight of the finished piece, which may differ from the quote by up to 5%.", "The gold rate in your quote is fixed once we receive your advance."] },
     { h: "4. Advance and payment", li: [`Your order is confirmed when you pay an advance, normally ${c.advance}% of the quote.`, "The balance is paid in cash or by card when you collect or receive your piece.", "We do not collect card details on this website."] },
     { h: "5. Design approval and changes", li: ["We send you a drawing or render to approve. We only start making your piece after you approve it.", "You can ask for changes before you approve. Changes after making has started may cost extra and take longer."] },
     { h: "6. Cancellations and returns", li: ["You can cancel before you approve the design and receive your advance back in full.", "Once you have approved the design and making has started, the advance can't be refunded, because the gold is set aside for your piece.", "Custom pieces can't be returned or exchanged unless there is a manufacturing fault.", "None of this affects your rights under Qatar's Consumer Protection Law (Law No. 8 of 2008)."] },

@@ -7,6 +7,7 @@ import { refreshShop } from "@/lib/admin";
 import { uploadPublic } from "@/lib/upload";
 import { COLORS, DEFAULT_RATES, KARATS, estimate, qar } from "@/lib/gold";
 import type { Category, Design, StoneOption } from "@/lib/types";
+import { DEFAULT_STONES, stoneTypeOf, type StoneType } from "@/lib/stones";
 
 const slugify = (s: string) => s.toLowerCase().normalize("NFKD").replace(/[^\w\s-]/g, "").trim().replace(/[\s_]+/g, "-").replace(/-+/g, "-").slice(0, 60);
 const BLANK: Omit<Design, "id"> = {
@@ -20,6 +21,7 @@ export default function DesignEditor() {
   const router = useRouter();
   const [d, setD] = useState<Omit<Design, "id">>(BLANK);
   const [cats, setCats] = useState<Category[]>([]);
+  const [types, setTypes] = useState<StoneType[]>(DEFAULT_STONES);
   const [rates, setRates] = useState<Record<string, number>>(DEFAULT_RATES);
   const [sizesText, setSizesText] = useState("");
   const [msg, setMsg] = useState<{ t: "ok" | "err"; m: string } | null>(null);
@@ -30,6 +32,7 @@ export default function DesignEditor() {
     if (new URLSearchParams(window.location.search).get("saved")) setMsg({ t: "ok", m: "Saved. The website shows the new design now." });
     const db = supabaseBrowser();
     db.from("kraft_categories").select("*").order("sort_order").then(({ data }) => { const c = (data as Category[]) ?? []; setCats(c); if (isNew && c[0]) setD((x) => ({ ...x, category: x.category || c[0].slug })); });
+    db.from("kraft_stones").select("*").order("sort_order").then(({ data, error }) => !error && data && setTypes(data as StoneType[]));
     db.from("kraft_settings").select("rates").eq("id", 1).maybeSingle().then(({ data }) => data?.rates && setRates({ ...DEFAULT_RATES, ...data.rates }));
     if (!isNew) db.from("kraft_designs").select("*").eq("id", id).maybeSingle().then(({ data }) => {
       if (!data) return;
@@ -42,6 +45,18 @@ export default function DesignEditor() {
   const set = <K extends keyof typeof d>(k: K, v: (typeof d)[K]) => setD((x) => ({ ...x, [k]: v }));
   const toggle = (k: "karats" | "colors", v: string) => set(k, d[k].includes(v) ? d[k].filter((x) => x !== v) : [...d[k], v]);
   const setStone = (i: number, patch: Partial<StoneOption>) => set("stones", d.stones.map((s, k) => (k === i ? { ...s, ...patch } : s)));
+  /** Choosing a stone type links the option to it (for "Shop by stone", filters and the 3D colour) and fills in the names. */
+  const pickType = (i: number, typeId: string) => {
+    const t = types.find((x) => x.id === typeId);
+    const cur = d.stones[i];
+    if (!t) { setStone(i, { id: "" }); return; }
+    const taken = new Set(d.stones.filter((_, k) => k !== i).map((s) => s.id));
+    let id = t.id, n = 2;
+    while (taken.has(id)) id = `${t.id}-${n++}`;
+    const prev = stoneTypeOf(cur, types);
+    const blank = (v: string, old?: string) => !v.trim() || v === old;
+    setStone(i, { id, name_en: blank(cur.name_en, prev?.name_en) ? t.name_en : cur.name_en, name_ar: blank(cur.name_ar, prev?.name_ar) ? t.name_ar : cur.name_ar });
+  };
 
   const addImages = async (files: FileList | null) => {
     if (!files?.length) return;
@@ -83,7 +98,7 @@ export default function DesignEditor() {
   };
 
   const k = d.karats[0] ?? "22";
-  const est = estimate({ rates, karat: k, weightMin: d.weight_min, weightMax: d.weight_max, makingPerG: d.making_per_g });
+  const est = estimate({ rates, karat: k, weightMin: d.weight_min, weightMax: d.weight_max });
 
   return (
     <form onSubmit={save}>
@@ -124,10 +139,10 @@ export default function DesignEditor() {
             <div className="field full"><span>Colours offered <span className="hint">white gold is only possible in 18K</span></span><div className="checks">{COLORS.map((x) => <label key={x.id}><input type="checkbox" checked={d.colors.includes(x.id)} onChange={() => toggle("colors", x.id)} />{x.en}</label>)}</div></div>
             <div className="field"><label htmlFor="w1">Lightest weight (g)</label><input id="w1" inputMode="decimal" value={d.weight_min} onChange={(e) => set("weight_min", Number(e.target.value.replace(/[^\d.]/g, "")) || 0)} /></div>
             <div className="field"><label htmlFor="w2">Heaviest weight (g)</label><input id="w2" inputMode="decimal" value={d.weight_max} onChange={(e) => set("weight_max", Number(e.target.value.replace(/[^\d.]/g, "")) || 0)} /></div>
-            <div className="field"><label htmlFor="mk">Making charge (QAR per gram)</label><input id="mk" inputMode="decimal" value={d.making_per_g} onChange={(e) => set("making_per_g", Number(e.target.value.replace(/[^\d.]/g, "")) || 0)} /></div>
+            <div className="field"><span>Making charge</span><span className="hint" style={{ paddingTop: 6 }}>Set by weight for all designs in <a href="/admin/settings">Gold rates &amp; settings</a>. Customers only see prices with it included.</span></div>
             <div className="field"><label htmlFor="sz">Sizes <span className="hint">separated by commas; leave empty if none</span></label><input id="sz" value={sizesText} onChange={(e) => setSizesText(e.target.value)} placeholder={'e.g. 16", 18", 20" or 6, 7, 8'} /></div>
           </div>
-          <p className="notice info" style={{ margin: "14px 0 0" }}>At today&apos;s {k}K rate, the website shows about <b className="num">{qar(est.lo)} – {qar(est.hi)}</b> (from <b className="num">{qar(est.lo)}</b> on the design card).</p>
+          <p className="notice info" style={{ margin: "14px 0 0" }}>At today&apos;s {k}K rate, the website shows about <b className="num">{qar(est.lo)} – {qar(est.hi)}</b> (from <b className="num">{qar(est.lo)}</b> on the design card), making charge included.</p>
         </section>
 
         <section className="panel">
@@ -137,10 +152,14 @@ export default function DesignEditor() {
         </section>
 
         <section className="panel">
-          <h2>Stone options <span className="hint" style={{ fontWeight: 400, color: "var(--muted)", fontSize: 13 }}>leave empty for plain gold</span></h2>
+          <h2>Stone options <span className="hint" style={{ fontWeight: 400, color: "var(--muted)", fontSize: 13 }}>leave empty for plain gold · add new stone types under Stones</span></h2>
           <div style={{ display: "grid", gap: 8 }}>
             {d.stones.map((s, i) => (
               <div key={i} className="stone-row">
+                <select aria-label="Stone type" value={stoneTypeOf(s, types)?.id ?? ""} onChange={(e) => pickType(i, e.target.value)}>
+                  <option value="">Stone type…</option>
+                  {types.map((t) => <option key={t.id} value={t.id}>{t.name_en}{t.is_active ? "" : " (hidden)"}</option>)}
+                </select>
                 <input aria-label="Stone name (English)" placeholder="Name (English)" value={s.name_en} onChange={(e) => setStone(i, { name_en: e.target.value })} />
                 <input aria-label="Stone name (Arabic)" placeholder="الاسم بالعربية" dir="rtl" value={s.name_ar} onChange={(e) => setStone(i, { name_ar: e.target.value })} />
                 <input aria-label="Price (QAR)" placeholder="Price QAR" inputMode="decimal" value={s.price} onChange={(e) => setStone(i, { price: Number(e.target.value.replace(/[^\d.]/g, "")) || 0 })} />

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import { fmtDate } from "@/lib/admin";
-import { COLORS, DEFAULT_RATES, KARATS, STAGES, qar, stageLabel } from "@/lib/gold";
+import { COLORS, DEFAULT_RATES, KARATS, STAGES, makingFor, qar, stageLabel } from "@/lib/gold";
 import { signedUrls, uploadPrivate, waNumber } from "@/lib/upload";
 import type { Enquiry } from "@/lib/admin-types";
 import type { QuoteDetails } from "@/lib/types";
@@ -18,7 +18,6 @@ export default function RequestDetail() {
   const [events, setEvents] = useState<Ev[]>([]);
   const [urls, setUrls] = useState<Record<string, string>>({});
   const [settings, setSettings] = useState<{ rates: Record<string, number>; advance_pct: number; production_max_days: number }>({ rates: DEFAULT_RATES, advance_pct: 30, production_max_days: 28 });
-  const [making, setMaking] = useState(50);
   const [msg, setMsg] = useState<{ t: "ok" | "err"; m: string } | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -32,7 +31,6 @@ export default function RequestDetail() {
     const en = data as Enquiry | null;
     setE(en); setEvents((ev as Ev[]) ?? []);
     if (s) setSettings({ rates: { ...DEFAULT_RATES, ...(s.rates ?? {}) }, advance_pct: s.advance_pct ?? 30, production_max_days: s.production_max_days ?? 28 });
-    if (en?.design_id) { const { data: d } = await db.from("kraft_designs").select("making_per_g").eq("id", en.design_id).maybeSingle(); if (d) setMaking(Number(d.making_per_g)); }
     if (en) setUrls(await signedUrls([...(en.reference_images ?? []), ...(en.approval_images ?? [])]));
   }, [id]);
   useEffect(() => { load(); }, [load]);
@@ -105,7 +103,7 @@ export default function RequestDetail() {
         </div>
 
         <div style={{ display: "grid", gap: 16 }}>
-          <QuoteBuilder e={e} settings={settings} making={making} busy={busy} lang={lang} trackUrl={trackUrl} wa={wa}
+          <QuoteBuilder e={e} settings={settings} busy={busy} lang={lang} trackUrl={trackUrl} wa={wa}
             onSave={async (q) => { const ok = await setStatus(e.status === "new" ? "quoted" : e.status, e.status === "new" ? null : null, { quote: q, quoted_at: new Date().toISOString() }); if (ok) flash("ok", "Quote saved. The customer can see it on the tracking page. Send it on WhatsApp too."); }} />
 
           <Progress e={e} busy={busy} onSet={async (s, note) => { if (await setStatus(s, note)) flash("ok", `Status changed to “${stageLabel(s, "en")}”. The customer sees it on the tracking page.`); }} wa={wa} trackUrl={trackUrl} lang={lang} />
@@ -127,8 +125,8 @@ export default function RequestDetail() {
   );
 }
 
-function QuoteBuilder({ e, settings, making, busy, lang, trackUrl, wa, onSave }: {
-  e: Enquiry; settings: { rates: Record<string, number>; advance_pct: number; production_max_days: number }; making: number; busy: boolean; lang: "en" | "ar"; trackUrl: string;
+function QuoteBuilder({ e, settings, busy, lang, trackUrl, wa, onSave }: {
+  e: Enquiry; settings: { rates: Record<string, number>; advance_pct: number; production_max_days: number }; busy: boolean; lang: "en" | "ar"; trackUrl: string;
   wa: (t: string) => string; onSave: (q: QuoteDetails) => void;
 }) {
   const q0 = e.quote;
@@ -136,14 +134,15 @@ function QuoteBuilder({ e, settings, making, busy, lang, trackUrl, wa, onSave }:
   const [karat, setKarat] = useState(q0?.karat ?? e.karat ?? "22");
   const [weight, setWeight] = useState(String(q0?.weight ?? e.weight_est ?? ""));
   const [rate, setRate] = useState(String(q0?.rate ?? settings.rates[karat] ?? ""));
-  const [mk, setMk] = useState(String(q0?.making_per_g ?? making));
+  // Making charge follows the weight rule from Settings (150 / 120 / 100 per gram); it can be changed for special work.
+  const [mk, setMk] = useState(String(q0?.making_per_g ?? makingFor(Number(q0?.weight ?? e.weight_est ?? 0), settings.rates)));
   const [stones, setStones] = useState(String(q0?.stones ?? 0));
   const [discount, setDiscount] = useState(String(q0?.discount ?? 0));
   const [advPct, setAdvPct] = useState(String(q0?.advance_pct ?? settings.advance_pct));
   const [readyBy, setReadyBy] = useState(q0?.ready_by ?? defDate);
   const [note, setNote] = useState(q0?.note ?? "");
   useEffect(() => { if (!q0) setRate(String(settings.rates[karat] ?? "")); }, [karat, settings.rates, q0]);
-  useEffect(() => { if (!q0) setMk(String(making)); }, [making, q0]);
+  useEffect(() => { if (!q0) setMk(String(makingFor(Number(weight) || 0, settings.rates))); }, [weight, settings.rates, q0]);
   const n = (s: string) => Number(s) || 0;
   const total = useMemo(() => Math.max(0, r10(n(weight) * (n(rate) + n(mk)) + n(stones) - n(discount))), [weight, rate, mk, stones, discount]);
   const advance = r10((total * n(advPct)) / 100);
@@ -167,7 +166,7 @@ function QuoteBuilder({ e, settings, making, busy, lang, trackUrl, wa, onSave }:
         <div className="field full"><label htmlFor="qn">Note for the customer <span className="hint">optional, in {lang === "ar" ? "Arabic" : "English"}</span></label><textarea id="qn" value={note} onChange={(ev) => setNote(ev.target.value)} dir="auto" /></div>
       </div>
       <p style={{ margin: "14px 0 4px" }}>Total <span className="qtotal num">{qar(total)}</span> &nbsp;·&nbsp; Advance <b className="num">{qar(advance)}</b></p>
-      <p className="sub" style={{ margin: "0 0 12px" }}>Weight × (gold rate + making) + stones − discount, rounded to 10.</p>
+      <p className="sub" style={{ margin: "0 0 12px" }}>Weight × (gold rate + making) + stones − discount, rounded to 10. Making fills in from the weight rule; change it for special work. The customer only sees the total.</p>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         <button className="btn p" type="button" disabled={busy || !(quote.weight > 0) || !(quote.rate > 0)} onClick={() => onSave(quote)}>{e.quote ? "Update quote" : "Save quote"}</button>
         {e.quote && <a className="btn wa" href={wa(msg)} target="_blank" rel="noopener">Send quote on WhatsApp</a>}

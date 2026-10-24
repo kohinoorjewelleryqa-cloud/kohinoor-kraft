@@ -32,7 +32,7 @@ export default async function DesignPage({ params, searchParams }: { params: Pro
   const design = await getDesign(slug);
   if (!design) notFound();
   const d = t(lang);
-  const { categories, settings } = await getCatalog();
+  const { categories, settings, stones } = await getCatalog();
   const cat = categories.find((c) => c.slug === design.category);
   const weeks: [number, number] = [Math.max(1, Math.round(settings.production_min_days / 7)), Math.max(1, Math.round(settings.production_max_days / 7))];
   const n = (v: number) => v.toLocaleString(lang === "ar" ? "ar-QA" : "en-US");
@@ -49,11 +49,10 @@ export default async function DesignPage({ params, searchParams }: { params: Pro
         {pick(design, "description", lang) && <p>{pick(design, "description", lang)}</p>}
         <ul className="facts">
           <li>{d.design.karatsAvailable} {karatList}</li>
-          <li>{d.design.making}: <bdi className="num">{qar(design.making_per_g, lang)}</bdi> {d.design.perGram}</li>
           <li>{d.design.weight}: <bdi className="num">{n(design.weight_min)}–{n(design.weight_max)} {d.design.grams}</bdi></li>
         </ul>
       </header>
-      <Customiser lang={lang} d={d} design={design} categories={categories} rates={settings.rates} weeks={weeks} initial={{ name: sp.name?.slice(0, 20), font: sp.font, color: sp.color, stone: optionFor(design, sp.stone)?.id }} />
+      <Customiser lang={lang} d={d} design={design} categories={categories} rates={settings.rates} weeks={weeks} initial={{ name: sp.name?.slice(0, 20), font: sp.font, color: sp.color, stone: optionFor(design, sp.stone, stones)?.id }} stones={stones} />
     </main>
   );
 }

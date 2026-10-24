@@ -3,9 +3,9 @@ import type { Lang } from "./i18n";
 import type { Design } from "./types";
 
 /** A design's starting price: lightest weight in the lowest karat it is offered in (the "From" price on cards). */
-export function fromPrice(d: Pick<Design, "karats" | "weight_min" | "making_per_g">, rates: Record<string, number>) {
+export function fromPrice(d: Pick<Design, "karats" | "weight_min">, rates: Record<string, number>) {
   const k = [...d.karats].sort()[0] ?? "18";
-  return estimate({ rates, karat: k, weightMin: d.weight_min, weightMax: d.weight_min, makingPerG: d.making_per_g }).lo;
+  return estimate({ rates, karat: k, weightMin: d.weight_min, weightMax: d.weight_min }).lo;
 }
 
 /** Shop-by-budget bands (QAR). "under-1000" means the design starts below QAR 1,000. */

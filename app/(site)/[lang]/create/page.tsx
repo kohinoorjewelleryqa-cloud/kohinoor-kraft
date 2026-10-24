@@ -14,13 +14,13 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: Lan
 export default async function Create({ params }: { params: Promise<{ lang: Lang }> }) {
   const { lang } = await params;
   const d = t(lang);
-  const { categories, settings } = await getCatalog();
+  const { categories, settings, stones } = await getCatalog();
   const weeks: [number, number] = [Math.max(1, Math.round(settings.production_min_days / 7)), Math.max(1, Math.round(settings.production_max_days / 7))];
   return (
     <>
     <PageHero p={PHOTOS.sketch} lang={lang} title={d.create.title} text={d.create.text} />
     <main className="wrap page">
-      <Customiser lang={lang} d={d} design={null} categories={categories} rates={settings.rates} weeks={weeks} />
+      <Customiser lang={lang} d={d} design={null} categories={categories} rates={settings.rates} weeks={weeks} stones={stones} />
     </main>
     </>
   );

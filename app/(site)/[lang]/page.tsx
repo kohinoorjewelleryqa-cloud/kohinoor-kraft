@@ -5,7 +5,7 @@ import NamePendant from "@/components/NamePendant";
 import Pic from "@/components/Pic";
 import { CATEGORY_PHOTOS, PHOTOS } from "@/lib/photos";
 import { budgetCounts, budgetParts, designCount } from "@/lib/budget";
-import { stoneCounts, stoneName } from "@/lib/stones";
+import { gemShades, stoneAbout, stoneCounts, stoneName } from "@/lib/stones";
 import Gem from "@/components/Gem";
 import DesignCard from "@/components/DesignCard";
 import { getCatalog } from "@/lib/catalog";
@@ -18,11 +18,11 @@ import { href, pick, t } from "@/lib/i18n";
 export default async function Home({ params }: { params: Promise<{ lang: Lang }> }) {
   const { lang } = await params;
   const d = t(lang);
-  const { categories, designs, portfolio, settings } = await getCatalog();
+  const { categories, designs, portfolio, settings, stones: stoneTypes } = await getCatalog();
   const featured = designs.filter((x) => x.is_featured).concat(designs.filter((x) => !x.is_featured)).slice(0, 10);
   const budgets = budgetCounts(designs, settings.rates);
   const buy = buyRates(settings.rates);
-  const stones = stoneCounts(designs);
+  const stones = stoneCounts(designs, stoneTypes);
   const num = (n: number) => Math.round(n).toLocaleString(lang === "ar" ? "ar-QA" : "en-US");
 
   return (
@@ -104,10 +104,10 @@ export default async function Home({ params }: { params: Promise<{ lang: Lang }>
             <p className="sh-sub">{d.sections.stonesText}</p>
             <div className="stone-tiles">
               {stones.map(({ t: st, count, from }) => (
-                <Link key={st.id} className="stone-tile" href={`${href(lang, "/designs")}?stone=${st.id}`} style={{ "--g1": st.colors[1], "--g2": st.colors[2] } as React.CSSProperties}>
+                <Link key={st.id} className="stone-tile" href={`${href(lang, "/designs")}?stone=${st.id}`} style={{ "--g1": gemShades(st.color)[1], "--g2": gemShades(st.color)[2] } as React.CSSProperties}>
                   <span className="st-gem"><Gem t={st} /></span>
                   <b>{stoneName(st, lang)}</b>
-                  <p>{lang === "ar" ? st.about_ar : st.about_en}</p>
+                  {stoneAbout(st, lang) && <p>{stoneAbout(st, lang)}</p>}
                   <small>{designCount(count, lang)} · {d.sections.stoneFrom} <bdi className="num">+{qar(from, lang)}</bdi></small>
                 </Link>
               ))}

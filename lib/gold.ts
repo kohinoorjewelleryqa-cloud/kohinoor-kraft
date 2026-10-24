@@ -69,15 +69,31 @@ export const rateFor = (rates: Record<string, number>, karat: string) => Number(
 const r10 = (n: number) => Math.round(n / 10) * 10;
 
 /**
- * Estimated price range: (gold rate + making charge per gram) × weight, plus the chosen stones.
- * The final price is confirmed by the shop with the exact weight.
+ * Making charge by weight (QAR per gram), set in Admin → Gold rates & settings and kept with the rates:
+ * under mkw1 grams → mk1, from mkw1 to under mkw2 → mk2, mkw2 and above → mk3.
+ * The shop's rule: 1–2 g 150/g, 3–6 g 120/g, 7 g and above 100/g. Customers never see it separately;
+ * every price on the website already includes it.
  */
-export function estimate(opts: { rates: Record<string, number>; karat: string; weightMin: number; weightMax: number; makingPerG: number; stonePrice?: number }) {
+export const MAKING_DEFAULT = { mk1: 150, mk2: 120, mk3: 100, mkw1: 3, mkw2: 7 };
+export function makingTiers(rates: Record<string, number>) {
+  const v = (k: keyof typeof MAKING_DEFAULT) => (Number(rates[k]) > 0 ? Number(rates[k]) : MAKING_DEFAULT[k]);
+  return { mk1: v("mk1"), mk2: v("mk2"), mk3: v("mk3"), mkw1: v("mkw1"), mkw2: v("mkw2") };
+}
+export function makingFor(weight: number, rates: Record<string, number>) {
+  const t = makingTiers(rates);
+  return weight < t.mkw1 ? t.mk1 : weight < t.mkw2 ? t.mk2 : t.mk3;
+}
+
+/**
+ * Estimated price range (making charge included): (gold rate + making charge for that weight) × weight, plus stones.
+ * The final price is confirmed by the shop with the exact weight and the work involved.
+ */
+export function estimate(opts: { rates: Record<string, number>; karat: string; weightMin: number; weightMax: number; stonePrice?: number }) {
   const rate = rateFor(opts.rates, opts.karat);
-  const perG = rate + Math.max(0, opts.makingPerG);
   const stones = Math.max(0, opts.stonePrice || 0);
-  const lo = r10(perG * Math.max(0, opts.weightMin) + stones);
-  const hi = r10(perG * Math.max(opts.weightMin, opts.weightMax) + stones);
+  const price = (w: number) => r10((rate + makingFor(w, opts.rates)) * Math.max(0, w) + stones);
+  const lo = price(opts.weightMin);
+  const hi = Math.max(lo, price(Math.max(opts.weightMin, opts.weightMax)));
   return { rate, lo, hi };
 }
 

@@ -50,7 +50,7 @@ export async function submitEnquiry(input: EnquiryInput): Promise<EnquiryResult>
   if (!name) return { ok: false, error: d.errors.name };
   if (digits(phone).length < 8) return { ok: false, error: d.errors.phone };
 
-  const { settings, designs } = await getCatalog();
+  const { settings, designs, stones: stoneTypes } = await getCatalog();
   const design = input.designSlug ? designs.find((x) => x.slug === input.designSlug) : undefined;
   const karats = design?.karats?.length ? design.karats : KARATS.map((k) => k.id as string);
   const karat = karats.includes(clean(input.karat, 4)) ? clean(input.karat, 4) : karats[0];
@@ -58,7 +58,7 @@ export async function submitEnquiry(input: EnquiryInput): Promise<EnquiryResult>
   let color = colors.includes(clean(input.color, 10)) ? clean(input.color, 10) : colors[0];
   if (!colorAllowed(color, karat)) color = colors.find((c) => colorAllowed(c, karat)) ?? "yellow";
   const stone = design?.stones.find((s) => s.id === input.stone);
-  const customStone = design ? undefined : findStone(input.stone); // "Create your own": a stone type
+  const customStone = design ? undefined : findStone(stoneTypes, input.stone); // "Create your own": a stone type
   const engraving = design?.engraving || !design ? clean(input.engraving, design?.engraving_max || 40) : "";
 
   // Estimate on the server from today's rates (never trust numbers from the browser).
@@ -66,7 +66,7 @@ export async function submitEnquiry(input: EnquiryInput): Promise<EnquiryResult>
   let weight: number | null = null;
   if (design) {
     weight = Number.isFinite(input.weight) ? Math.min(design.weight_max, Math.max(design.weight_min, Number(input.weight))) : null;
-    est = estimate({ rates: settings.rates, karat, weightMin: weight ?? design.weight_min, weightMax: weight ?? design.weight_max, makingPerG: design.making_per_g, stonePrice: stone?.price });
+    est = estimate({ rates: settings.rates, karat, weightMin: weight ?? design.weight_min, weightMax: weight ?? design.weight_max, stonePrice: stone?.price });
   }
 
   const now = new Date();
@@ -79,7 +79,7 @@ export async function submitEnquiry(input: EnquiryInput): Promise<EnquiryResult>
   const lines = (ref: string) => [
     lang === "ar" ? `طلب جديد ${ref}` : `New request ${ref}`,
     `${designName}`,
-    `${kLabel} · ${cLabel}${input.size ? ` · ${clean(input.size, 20)}` : ""}${weight ? ` · ~${weight} g` : ""}${stone ? ` · ${lang === "ar" ? stone.name_ar : stone.name_en}` : customStone ? ` · ${lang === "ar" ? customStone.ar : customStone.en}` : ""}`,
+    `${kLabel} · ${cLabel}${input.size ? ` · ${clean(input.size, 20)}` : ""}${weight ? ` · ~${weight} g` : ""}${stone ? ` · ${lang === "ar" ? stone.name_ar : stone.name_en}` : customStone ? ` · ${lang === "ar" ? customStone.name_ar : customStone.name_en}` : ""}`,
     engraving ? `${d.design.engraving}: ${engraving}` : "",
     est ? `${d.design.estimate}: ${qar(est.lo, lang)} – ${qar(est.hi, lang)}` : "",
     clean(input.notes, 500),
@@ -97,7 +97,7 @@ export async function submitEnquiry(input: EnquiryInput): Promise<EnquiryResult>
     const { data, error } = await db.from("kraft_enquiries").insert({
       ref, lang, design_id: design && !design.id.startsWith("demo-") ? design.id : null, design_name: designName,
       customer_name: name, phone, email: clean(input.email, 120) || null,
-      karat, color, size: clean(input.size, 20) || null, weight_est: weight, stone: stone ? stone.name_en : customStone?.en ?? null,
+      karat, color, size: clean(input.size, 20) || null, weight_est: weight, stone: stone ? stone.name_en : customStone?.name_en ?? null,
       engraving_text: engraving || null, engraving_font: clean(input.font, 20) || null, notes: clean(input.notes, 1000) || null,
       reference_images: photos, estimate_lo: est?.lo ?? null, estimate_hi: est?.hi ?? null, rate_at_request: est?.rate ?? null,
     }).select("id").single();

@@ -1,10 +1,10 @@
-import type { StoneType } from "@/lib/stones";
+import { gemShades, type StoneType } from "@/lib/stones";
 
 /** A faceted gemstone drawing in the stone's colours (a pearl is drawn round). */
 export default function Gem({ t, className = "" }: { t: StoneType; className?: string }) {
-  const [hi, mid, lo] = t.colors;
+  const [hi, mid, lo] = gemShades(t.color);
   const id = `gem-${t.id}`;
-  if (t.round)
+  if (t.kind === "pearl")
     return (
       <svg className={`gem ${className}`} viewBox="0 0 100 100" aria-hidden="true">
         <defs><radialGradient id={id} cx=".38" cy=".32" r=".75"><stop offset="0" stopColor={hi} /><stop offset=".55" stopColor={mid} /><stop offset="1" stopColor={lo} /></radialGradient></defs>

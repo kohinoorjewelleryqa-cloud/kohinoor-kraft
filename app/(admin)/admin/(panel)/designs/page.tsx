@@ -28,7 +28,7 @@ export default function DesignsAdmin() {
         <Link className="btn p" href="/admin/designs/new">+ Add design</Link>
       </div>
       <div className="tbl-wrap"><table className="tbl">
-        <thead><tr><th></th><th>Design</th><th>Category</th><th>Weight</th><th>Making /g</th><th>Shown</th></tr></thead>
+        <thead><tr><th></th><th>Design</th><th>Category</th><th>Weight</th><th>Shown</th></tr></thead>
         <tbody>
           {list.map((d) => (
             <tr key={d.id} className="click" onClick={() => router.push(`/admin/designs/${d.id}`)}>
@@ -36,7 +36,6 @@ export default function DesignsAdmin() {
               <td><b>{d.name_en}</b><br /><small dir="rtl" style={{ color: "var(--muted)" }}>{d.name_ar}</small></td>
               <td>{cats.find((c) => c.slug === d.category)?.name_en ?? d.category}</td>
               <td className="num">{d.weight_min}–{d.weight_max} g</td>
-              <td className="num">{d.making_per_g}</td>
               <td>{d.is_active ? <span className="pill ok">Live</span> : <span className="pill off">Hidden</span>}{d.is_featured && <> <span className="pill">Popular</span></>}</td>
             </tr>
           ))}

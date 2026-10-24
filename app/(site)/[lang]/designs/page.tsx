@@ -19,16 +19,16 @@ export default async function Designs({ params, searchParams }: { params: Promis
   const { lang } = await params;
   const { cat, budget: budgetId, stone: stoneId } = await searchParams;
   const d = t(lang);
-  const { categories, designs, settings } = await getCatalog();
+  const { categories, designs, settings, stones: stoneTypes } = await getCatalog();
   const current = categories.find((c) => c.slug === cat);
   const budget = findBudget(budgetId);
-  const stone = findStone(stoneId);
-  const inCat = (current ? designs.filter((x) => x.category === current.slug) : designs).filter((x) => !stone || optionFor(x, stone.id));
+  const stone = findStone(stoneTypes, stoneId);
+  const inCat = (current ? designs.filter((x) => x.category === current.slug) : designs).filter((x) => !stone || optionFor(x, stone.id, stoneTypes));
   // With a budget chosen: only designs starting within it, cheapest first.
-  const priceOf = (x: (typeof designs)[number]) => fromPrice(x, settings.rates) + (optionFor(x, stone?.id)?.price ?? 0);
+  const priceOf = (x: (typeof designs)[number]) => fromPrice(x, settings.rates) + (optionFor(x, stone?.id, stoneTypes)?.price ?? 0);
   const list = budget ? inCat.filter((x) => inBudget(budget, priceOf(x))).sort((a, b) => priceOf(a) - priceOf(b)) : inCat;
   const budgets = budgetCounts(inCat, settings.rates, budget?.id);
-  const stones = stoneCounts(current ? designs.filter((x) => x.category === current.slug) : designs, stone?.id);
+  const stones = stoneCounts(current ? designs.filter((x) => x.category === current.slug) : designs, stoneTypes, stone?.id);
   const link = (c?: string, b?: string, st: string | undefined = stone?.id) => { const q = new URLSearchParams(); if (c) q.set("cat", c); if (b) q.set("budget", b); if (st) q.set("stone", st); const s = q.toString(); return `${href(lang, "/designs")}${s ? `?${s}` : ""}`; };
   return (
     <>
@@ -52,7 +52,7 @@ export default async function Designs({ params, searchParams }: { params: Promis
           {budgets.map(({ b }) => <Link key={b.id} href={link(current?.slug, b.id)} aria-current={budget?.id === b.id ? "page" : undefined}>{budgetLabel(b, lang)}</Link>)}
         </nav>
       )}
-      {list.length ? <div className="grid">{list.map((x) => <DesignCard key={x.id} d={x} lang={lang} rates={settings.rates} stone={stone?.id} />)}</div> : <p className="muted">{d.empty}</p>}
+      {list.length ? <div className="grid">{list.map((x) => <DesignCard key={x.id} d={x} lang={lang} rates={settings.rates} stone={stone ? { type: stone.id, option: optionFor(x, stone.id, stoneTypes) } : undefined} />)}</div> : <p className="muted">{d.empty}</p>}
       <div className="create-strip"><p>{d.create.text}</p><Link className="btn gold" href={href(lang, "/create")}>{d.nav.create}</Link></div>
     </main>
     </>

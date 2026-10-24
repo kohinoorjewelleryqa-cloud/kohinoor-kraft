@@ -43,7 +43,9 @@ export type Design = {
 
 export type PortfolioItem = { id: string; title_en: string; title_ar: string; image: string; category: string | null; sort_order: number };
 
-export type Catalog = { settings: Settings; categories: Category[]; designs: Design[]; portfolio: PortfolioItem[]; demo: boolean };
+export type Catalog = { settings: Settings; categories: Category[]; designs: Design[]; portfolio: PortfolioItem[]; stones: StoneType[]; demo: boolean };
+
+import type { StoneType } from "./stones";
 
 export type QuoteDetails = {
   karat: string;
