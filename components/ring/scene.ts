@@ -12,8 +12,8 @@ const CLEAR: StoneLook = { color: "#FBFBFF", ior: 2.15, dispersion: 6, pearl: fa
 const R_IN = 8.6;
 
 /** A ring band whose width and thickness can taper towards the top, with a soft rounded profile. */
-function shank(wBottom: number, wTop: number, tBottom: number, tTop: number) {
-  const SEG = 220, PROF = 28, p = 3.2;
+function shank(wBottom: number, wTop: number, tBottom: number, tTop: number, p = 3.2) {
+  const SEG = 220, PROF = 28;
   const pos: number[] = [], idx: number[] = [];
   const sp = (v: number, e: number) => Math.sign(v) * Math.pow(Math.abs(v), e);
   for (let i = 0; i <= SEG; i++) {
@@ -131,62 +131,168 @@ export function createRingScene(host: HTMLElement, onFirstMove: () => void) {
     g.clear();
   }
 
+  const V = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
+  let geoCache = new Map<string, THREE.BufferGeometry>();
+  /** One shared geometry per stone shape and size, so rings with many stones stay light. */
+  const stoneGeom = (shape: "round" | "step" | "princess", r: number) => {
+    const k = `${pearl ? "pearl" : shape}:${r}`;
+    if (!geoCache.has(k)) geoCache.set(k, pearl ? new THREE.SphereGeometry(r * 0.92, 40, 28) : stoneGeo(shape, r));
+    return geoCache.get(k)!;
+  };
+  const stone = (shape: "round" | "step" | "princess", r: number) => new THREE.Mesh(stoneGeom(shape, r), pearl ? pearlMat : stoneMat);
+
+  /** A round stone held by claws. Local coordinates: y = 0 is the top of the band, the stone's widest point is at `rise`. */
+  function clawHead(r: number, n: number, rise: number, opts: { long?: number; turn?: number; base?: number } = {}) {
+    const { long = 1, turn = 0, base = 0.9 } = opts;
+    const h = new THREE.Group();
+    const k = Math.min(1, Math.max(0.62, r / 3.25));
+    const st = stone("round", r);
+    st.position.y = rise + (pearl ? r * 0.2 : 0);
+    if (long !== 1) st.scale.set(1, 1, long);
+    h.add(st);
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2 + turn;
+      const ca = Math.cos(a), sa = Math.sin(a) * long;
+      h.add(prong(V(ca * base, -0.3, sa * base), V(ca * (r + 0.05), rise - 1.2 * k, sa * (r + 0.05)), V(ca * r * 0.93, rise + r * 0.3, sa * r * 0.93), 0.3 * k, metalMat));
+    }
+    const basket = new THREE.Mesh(new THREE.TorusGeometry(r * 0.72, 0.22 * k, 10, 48), metalMat);
+    basket.rotation.x = Math.PI / 2; basket.position.y = rise - 1.4 * k; basket.scale.set(1, long, 1);
+    h.add(basket);
+    return h;
+  }
+
+  /** Stones set side by side into the outside of a band, from angle a0 to a1 (0 = top). */
+  function channel(rOut: number, r: number, a0: number, a1: number, full: boolean) {
+    const g = new THREE.Group();
+    const step = (2 * r + 0.32) / rOut;
+    const n = full ? Math.floor((Math.PI * 2) / step) : Math.floor((a1 - a0) / step) + 1;
+    const da = full ? (Math.PI * 2) / n : step;
+    const start = full ? 0 : -((n - 1) * da) / 2;
+    const bead = new THREE.SphereGeometry(0.24, 10, 8);
+    for (let i = 0; i < n; i++) {
+      const th = start + i * da;
+      const st = stone("round", r);
+      st.position.set(Math.sin(th) * (rOut + 0.22), Math.cos(th) * (rOut + 0.22), 0);
+      st.rotation.z = -th;
+      g.add(st);
+      if (!full && i === n - 1) continue;
+      const tb = th + da / 2;
+      for (const z of [-1, 1]) {
+        const b = new THREE.Mesh(bead, metalMat);
+        b.position.set(Math.sin(tb) * (rOut + 0.42), Math.cos(tb) * (rOut + 0.42), z * r * 0.72);
+        g.add(b);
+      }
+    }
+    return g;
+  }
+
+  /** Two gold strands twisted round each other. */
+  function twistBand() {
+    const g = new THREE.Group();
+    const rm = R_IN + 0.95, amp = 0.55, turns = 14, N = 480;
+    for (const ph of [0, Math.PI]) {
+      const pts: THREE.Vector3[] = [];
+      for (let i = 0; i < N; i++) {
+        const th = (i / N) * Math.PI * 2, w = turns * th + ph;
+        const r = rm + amp * Math.cos(w);
+        pts.push(V(Math.sin(th) * r, Math.cos(th) * r, amp * 1.25 * Math.sin(w)));
+      }
+      g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts, true), 900, 0.74, 14, true), metalMat));
+    }
+    return g;
+  }
+
   function build(s: RingStyle) {
     clear(ring);
-    const stoneM = pearl ? pearlMat : stoneMat;
-    if (s === "band") {
-      ring.add(new THREE.Mesh(shank(3.6, 3.6, 1.8, 1.8), metalMat));
-      shadow.position.y = -R_IN - 1.8 - 0.05;
-      return;
-    }
-    const tTop = 1.45, top = R_IN + tTop; // outside of the band at the top
-    ring.add(new THREE.Mesh(shank(2.3, 1.75, 1.7, tTop), metalMat));
-    shadow.position.y = -R_IN - 1.7 - 0.05;
+    geoCache.forEach((g) => g.dispose());
+    geoCache = new Map();
+    const floor = (t: number) => { shadow.position.y = -R_IN - t - 0.05; };
 
+    // ---- bands ----
+    if (s === "band") { ring.add(new THREE.Mesh(shank(3.6, 3.6, 1.8, 1.8, 2.4), metalMat)); floor(1.8); return; }
+    if (s === "flatband") { ring.add(new THREE.Mesh(shank(4.2, 4.2, 1.6, 1.6, 9), metalMat)); floor(1.6); return; }
+    if (s === "twist") { ring.add(twistBand()); floor(1.9); return; }
+    if (s === "signet") {
+      ring.add(new THREE.Mesh(shank(2.6, 5.4, 1.6, 2.6, 2.6), metalMat));
+      const face = new THREE.Mesh(new THREE.CylinderGeometry(0.93, 1, 1, 72), metalMat);
+      face.scale.set(3.1, 1.3, 3.8); face.position.y = R_IN + 2.15;
+      ring.add(face);
+      floor(1.6); return;
+    }
+    if (s === "eternity" || s === "halfeternity") {
+      const full = s === "eternity";
+      const t = full ? 1.9 : 1.75, w = full ? 3.0 : 2.7;
+      ring.add(new THREE.Mesh(shank(w, w, t, t, 3.6), metalMat));
+      ring.add(channel(R_IN + t, full ? 1.0 : 1.05, -1.0, 1.0, full));
+      floor(t); return;
+    }
+
+    // ---- rings with a centre stone ----
+    const tTop = 1.45, top = R_IN + tTop; // outside of the band at the top
+    ring.add(new THREE.Mesh(s === "threestone" ? shank(2.3, 2.2, 1.7, tTop) : shank(2.3, 1.75, 1.7, tTop), metalMat));
+    floor(1.7);
     const head = new THREE.Group();
-    const gy = top + 3.0; // height of the stone's girdle
+    head.position.y = top; // inside the head, y = 0 is the top of the band
     const add = (m: THREE.Object3D) => head.add(m);
-    if (s === "round" || s === "oval" || s === "halo") {
-      const r = s === "halo" ? 2.6 : 3.25;
-      const g = pearl ? new THREE.SphereGeometry(r * 0.95, 48, 32) : stoneGeo("round", r);
-      const st = new THREE.Mesh(g, stoneM);
-      st.position.y = gy + (pearl ? r * 0.2 : 0);
-      if (s === "oval") st.scale.set(1, 1, 1.38);
-      add(st);
-      const sz = s === "oval" ? 1.38 : 1;
-      const n = s === "halo" ? 4 : 6;
-      for (let i = 0; i < n; i++) {
-        const a = (i / n) * Math.PI * 2 + (n === 4 ? Math.PI / 4 : 0);
-        const ca = Math.cos(a), sa = Math.sin(a) * sz;
-        add(prong(new THREE.Vector3(ca * 0.9, top - 0.3, sa * 0.9), new THREE.Vector3(ca * (r + 0.05), gy - 1.2, sa * (r + 0.05)), new THREE.Vector3(ca * r * 0.93, gy + r * 0.3, sa * r * 0.93), 0.3, metalMat));
+    const rise = 3.0; // height of the stone's widest point above the band
+
+    if (s === "round" || s === "oval") {
+      add(clawHead(3.25, 6, rise, { long: s === "oval" ? 1.38 : 1 }));
+    } else if (s === "halo") {
+      const r = 2.6;
+      add(clawHead(r, 4, rise, { turn: Math.PI / 4 }));
+      const hr = r + 0.95, count = 18;
+      const plate = new THREE.Mesh(new THREE.TorusGeometry(hr, 0.62, 12, 64), metalMat);
+      plate.rotation.x = Math.PI / 2; plate.position.y = rise - 0.25; plate.scale.set(1, 1, 0.55);
+      add(plate);
+      const beadG = new THREE.SphereGeometry(0.16, 8, 6);
+      for (let i = 0; i < count; i++) {
+        const a = (i / count) * Math.PI * 2;
+        const m = stone("round", 0.55);
+        m.position.set(Math.cos(a) * hr, rise + 0.2, Math.sin(a) * hr);
+        add(m);
+        const bead = new THREE.Mesh(beadG, metalMat);
+        const b = a + Math.PI / count;
+        bead.position.set(Math.cos(b) * hr, rise + 0.32, Math.sin(b) * hr);
+        add(bead);
       }
-      const basket = new THREE.Mesh(new THREE.TorusGeometry(r * 0.72, 0.22, 10, 48), metalMat);
-      basket.rotation.x = Math.PI / 2; basket.position.y = gy - 1.4; basket.scale.set(1, sz, 1);
-      add(basket);
-      if (s === "halo") {
-        const hr = r + 0.95, count = 18;
-        const plate = new THREE.Mesh(new THREE.TorusGeometry(hr, 0.62, 12, 64), metalMat);
-        plate.rotation.x = Math.PI / 2; plate.position.y = gy - 0.25; plate.scale.set(1, 1, 0.55);
-        add(plate);
-        const small = pearl ? new THREE.SphereGeometry(0.5, 16, 12) : stoneGeo("round", 0.55);
-        for (let i = 0; i < count; i++) {
-          const a = (i / count) * Math.PI * 2;
-          const m = new THREE.Mesh(small, s === "halo" && !pearl ? stoneMat : stoneM);
-          m.position.set(Math.cos(a) * hr, gy + 0.2, Math.sin(a) * hr);
-          add(m);
-          const bead = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 6), metalMat);
-          const b = a + Math.PI / count;
-          bead.position.set(Math.cos(b) * hr, gy + 0.32, Math.sin(b) * hr);
-          add(bead);
+    } else if (s === "threestone") {
+      add(clawHead(2.6, 4, 2.8, { turn: Math.PI / 4 }));
+      const r = 1.75, ang = 4.75 / top;
+      for (const side of [-1, 1]) {
+        const h = clawHead(r, 4, 2.0, { turn: Math.PI / 4, base: 0.55 });
+        const a = side * ang;
+        h.position.set(Math.sin(a) * top, Math.cos(a) * top - top, 0);
+        h.rotation.z = -a;
+        add(h);
+      }
+    } else if (s === "bezel") {
+      const r = 3.0, rb = 2.4;
+      const st = stone("round", r); st.position.y = rb + (pearl ? r * 0.25 : 0); add(st);
+      const P = (x: number, y: number) => new THREE.Vector2(x, y);
+      const cup = new THREE.LatheGeometry([P(r * 0.5, -0.3), P(r * 0.62, -0.32), P(r + 0.42, rb - 1.1), P(r + 0.5, rb + 0.28), P(r + 0.14, rb + 0.42), P(r - 0.1, rb + 0.14), P(r - 0.1, rb - 0.55), P(r * 0.5, rb - 0.95), P(r * 0.5, -0.3)], 80);
+      add(new THREE.Mesh(cup, metalMat));
+    } else if (s === "cluster") {
+      const rc = 1.55, rp = 1.15, rr = 2.9, rise2 = 1.35, n = 8;
+      const plate = new THREE.Mesh(new THREE.CylinderGeometry(4.3, 1.6, 1.5, 64), metalMat);
+      plate.position.y = rise2 - 0.95; add(plate);
+      const c = stone("round", rc); c.position.y = rise2 + 0.15 + (pearl ? 0.4 : 0); add(c);
+      const beadG = new THREE.SphereGeometry(0.27, 10, 8);
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * Math.PI * 2;
+        const p = stone("round", rp); p.position.set(Math.cos(a) * rr, rise2 + (pearl ? 0.3 : 0), Math.sin(a) * rr); add(p);
+        const b = a + Math.PI / n;
+        for (const rad of [2.05, 4.0]) {
+          const bead = new THREE.Mesh(beadG, metalMat);
+          bead.position.set(Math.cos(b) * rad, rise2 + 0.3, Math.sin(b) * rad); add(bead);
         }
       }
     } else {
       // step-cut (emerald / east-west) or princess: a rectangle or square held by four corner prongs
       const princess = s === "princess";
       const r = princess ? 3.1 : 2.75;
-      const g = pearl ? new THREE.SphereGeometry(r * 0.9, 48, 32) : stoneGeo(princess ? "princess" : "step", r);
-      const st = new THREE.Mesh(g, stoneM);
-      st.position.y = gy;
+      const st = stone(princess ? "princess" : "step", r);
+      st.position.y = rise;
       const long = princess ? 1 : 1.42;
       if (s === "emerald") st.scale.set(1, 1, long); // long side along the finger
       if (s === "eastwest") st.scale.set(long, 1, 1); // long side across the finger
@@ -194,14 +300,14 @@ export function createRingScene(host: HTMLElement, onFirstMove: () => void) {
       // prongs sit on the stone's cut corners: 0.653 of the radius for the octagon (step cut), 0.707 for the square
       const k = princess ? 0.707 : 0.653;
       const hx = (s === "eastwest" ? long : 1) * r * k, hz = (s === "emerald" ? long : 1) * r * k;
-      const tipY = gy + r * (princess ? 0.2 : 0.24);
+      const tipY = rise + r * (princess ? 0.2 : 0.24);
       for (const [sx, sz] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) {
-        add(prong(new THREE.Vector3(sx * 0.9, top - 0.3, sz * 0.9), new THREE.Vector3(sx * (hx + 0.25), gy - 1.1, sz * (hz + 0.25)), new THREE.Vector3(sx * hx * 0.93, tipY, sz * hz * 0.93), 0.3, metalMat));
+        add(prong(V(sx * 0.9, -0.3, sz * 0.9), V(sx * (hx + 0.25), rise - 1.1, sz * (hz + 0.25)), V(sx * hx * 0.93, tipY, sz * hz * 0.93), 0.3, metalMat));
       }
       // a square rail under the stone (a 4-sided ring, turned flat and stretched to the stone's shape)
       const rg = new THREE.TorusGeometry(1, 0.2, 8, 4).rotateZ(Math.PI / 4).rotateX(Math.PI / 2);
       const rail = new THREE.Mesh(rg, metalMat);
-      rail.scale.set((hx * 0.85) / Math.SQRT1_2, 1, (hz * 0.85) / Math.SQRT1_2); rail.position.y = gy - 1.3;
+      rail.scale.set((hx * 0.85) / Math.SQRT1_2, 1, (hz * 0.85) / Math.SQRT1_2); rail.position.y = rise - 1.3;
       add(rail);
     }
     ring.add(head);
@@ -258,7 +364,7 @@ export function createRingScene(host: HTMLElement, onFirstMove: () => void) {
     setLook,
     dispose() {
       cancelAnimationFrame(raf); ro.disconnect(); io.disconnect(); clearTimeout(idleTimer);
-      controls.dispose(); clear(ring); pmrem.dispose(); renderer.dispose();
+      controls.dispose(); clear(ring); geoCache.forEach((g) => g.dispose()); pmrem.dispose(); renderer.dispose();
       renderer.domElement.remove();
     },
   };

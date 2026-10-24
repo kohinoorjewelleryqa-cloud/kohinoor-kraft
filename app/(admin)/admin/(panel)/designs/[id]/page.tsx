@@ -8,6 +8,7 @@ import { uploadPublic } from "@/lib/upload";
 import { COLORS, DEFAULT_RATES, KARATS, estimate, qar } from "@/lib/gold";
 import type { Category, Design, StoneOption } from "@/lib/types";
 import { DEFAULT_STONES, stoneTypeOf, type StoneType } from "@/lib/stones";
+import { ALL_RING_STYLES, BAND_STYLES, RING_STYLES, STONE_RING_STYLES, ringStylesFor, type RingStyle } from "@/lib/ring3d";
 
 const slugify = (s: string) => s.toLowerCase().normalize("NFKD").replace(/[^\w\s-]/g, "").trim().replace(/[\s_]+/g, "-").replace(/-+/g, "-").slice(0, 60);
 const BLANK: Omit<Design, "id"> = {
@@ -83,7 +84,7 @@ export default function DesignEditor() {
     const db = supabaseBrowser();
     const res = isNew ? await db.from("kraft_designs").insert(row).select("id").single() : await db.from("kraft_designs").update(row).eq("id", id).select("id").single();
     setBusy(false);
-    if (res.error) { setMsg({ t: "err", m: res.error.code === "23505" ? "Another design already uses this web address. Change the web address below." : res.error.message }); return; }
+    if (res.error) { setMsg({ t: "err", m: res.error.code === "23505" ? "Another design already uses this web address. Change the web address below." : /ring_3d/.test(res.error.message) ? "The 3D ring setting isn't set up yet. In Supabase, open SQL Editor, paste the file supabase/kraft-ring-3d.sql and press Run, then save again." : res.error.message }); return; }
     await refreshShop();
     if (isNew) { router.replace(`/admin/designs/${res.data.id}?saved=1`); return; }
     setD((x) => ({ ...x, slug: row.slug }));
@@ -96,6 +97,14 @@ export default function DesignEditor() {
     await refreshShop();
     router.replace("/admin/designs");
   };
+
+  // 3D ring preview: the ticked styles, with the "starts on" style first
+  const r3 = ringStylesFor({ slug: d.slug, ring_3d: d.ring_3d }) ?? [];
+  const setR3 = (list: RingStyle[], first: RingStyle | undefined = r3[0]) => {
+    const ordered = ALL_RING_STYLES.filter((x) => list.includes(x));
+    set("ring_3d", first && ordered.includes(first) ? [first, ...ordered.filter((x) => x !== first)] : ordered);
+  };
+  const toggleR3 = (x: RingStyle, on: boolean) => setR3(on ? [...r3, x] : r3.filter((y) => y !== x));
 
   const k = d.karats[0] ?? "22";
   const est = estimate({ rates, karat: k, weightMin: d.weight_min, weightMax: d.weight_max });
@@ -168,6 +177,29 @@ export default function DesignEditor() {
             ))}
           </div>
           <button type="button" className="btn o sm" style={{ marginTop: 10 }} onClick={() => set("stones", [...d.stones, { id: "", name_en: "", name_ar: "", price: 0 }])}>+ Add stone option</button>
+        </section>
+
+        <section className="panel">
+          <h2>3D ring preview <span className="hint" style={{ fontWeight: 400, color: "var(--muted)", fontSize: 13 }}>for rings only · customers turn the ring and switch styles live</span></h2>
+          <p className="sub" style={{ margin: "0 0 10px" }}>Tick the styles that match this ring. Leave all unticked to show the photo instead (for necklaces, name pieces and special designs). Ring styles with stones show the stone the customer picks.</p>
+          <div className="r3-quick">
+            <button type="button" className="btn o sm" onClick={() => setR3(STONE_RING_STYLES, "round")}>All stone rings</button>
+            <button type="button" className="btn o sm" onClick={() => setR3(BAND_STYLES, "band")}>All bands</button>
+            <button type="button" className="btn o sm" onClick={() => setR3([])}>None (photo only)</button>
+          </div>
+          <div className="r3-groups">
+            {([["With a centre stone", STONE_RING_STYLES], ["Bands", BAND_STYLES]] as [string, RingStyle[]][]).map(([title, list]) => (
+              <fieldset key={title} className="r3-group">
+                <legend>{title}</legend>
+                {list.map((x) => <label key={x}><input type="checkbox" checked={r3.includes(x)} onChange={(e) => toggleR3(x, e.target.checked)} />{RING_STYLES[x].en}</label>)}
+              </fieldset>
+            ))}
+          </div>
+          {r3.length > 1 && (
+            <div className="field" style={{ maxWidth: 260, marginTop: 12 }}><label htmlFor="r3f">Starts on</label>
+              <select id="r3f" value={r3[0]} onChange={(e) => setR3(r3, e.target.value as RingStyle)}>{r3.map((x) => <option key={x} value={x}>{RING_STYLES[x].en}</option>)}</select>
+            </div>
+          )}
         </section>
 
         <section className="panel">

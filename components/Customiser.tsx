@@ -52,7 +52,7 @@ export default function Customiser({ lang, d, design, categories, rates, weeks, 
   const [size, setSize] = useState("");
   const [weight, setWeight] = useState(design ? Math.round(((design.weight_min + design.weight_max) / 2) * 2) / 2 : 0);
   const [stone, setStone] = useState(initial?.stone ?? "");
-  const ringStyles = ringStylesFor(design?.slug);
+  const ringStyles = ringStylesFor(design ?? undefined);
   const [ringStyle, setRingStyle] = useState<RingStyle>(ringStyles?.[0] ?? "round");
   const [text, setText] = useState(initial?.name ?? "");
   const [font, setFont] = useState(initial?.font ?? "");
@@ -316,6 +316,25 @@ export default function Customiser({ lang, d, design, categories, rates, weeks, 
 
 /** Small outline icons for the ring styles. */
 function RingIcon({ s }: { s: RingStyle }) {
-  const stone = s === "round" ? <circle cx="12" cy="8" r="3.4" /> : s === "halo" ? <><circle cx="12" cy="8" r="2.3" /><circle cx="12" cy="8" r="4" strokeDasharray="1.2 1.2" /></> : s === "oval" ? <ellipse cx="12" cy="8" rx="2.6" ry="3.8" /> : s === "emerald" ? <path d="M10 4h4l1.5 1.5v5L14 12h-4l-1.5-1.5v-5z" /> : s === "eastwest" ? <path d="M8 6h8l1.5 1.5v1L16 10H8L6.5 8.5v-1z" /> : s === "princess" ? <rect x="9" y="5" width="6" height="6" /> : null;
-  return <svg className="ri" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.4"><ellipse cx="12" cy="16" rx={s === "band" ? 7 : 6.5} ry={s === "band" ? 5.5 : 4.5} strokeWidth={s === "band" ? 2.2 : 1.4} />{stone}</svg>;
+  const isBand = ["band", "flatband", "twist", "signet", "halfeternity", "eternity"].includes(s);
+  const top =
+    s === "round" ? <circle cx="12" cy="8" r="3.4" />
+    : s === "halo" ? <><circle cx="12" cy="8" r="2.3" /><circle cx="12" cy="8" r="4" strokeDasharray="1.2 1.2" /></>
+    : s === "oval" ? <ellipse cx="12" cy="8" rx="2.6" ry="3.8" />
+    : s === "emerald" ? <path d="M10 4h4l1.5 1.5v5L14 12h-4l-1.5-1.5v-5z" />
+    : s === "eastwest" ? <path d="M8 6h8l1.5 1.5v1L16 10H8L6.5 8.5v-1z" />
+    : s === "princess" ? <rect x="9" y="5" width="6" height="6" />
+    : s === "threestone" ? <><circle cx="12" cy="8" r="2.6" /><circle cx="7" cy="10" r="1.7" /><circle cx="17" cy="10" r="1.7" /></>
+    : s === "bezel" ? <><circle cx="12" cy="8" r="3.6" strokeWidth="2.2" /><circle cx="12" cy="8" r="1.6" /></>
+    : s === "cluster" ? <><circle cx="12" cy="8" r="1.4" />{[0, 60, 120, 180, 240, 300].map((a) => <circle key={a} cx={12 + 3 * Math.cos((a * Math.PI) / 180)} cy={8 + 3 * Math.sin((a * Math.PI) / 180)} r="1.1" />)}</>
+    : s === "signet" ? <rect x="8" y="6.5" width="8" height="5" rx="2.4" />
+    : null;
+  const band = s === "flatband" ? { sw: 3.2 } : s === "twist" ? { sw: 2.4, dash: "2.2 1.2" } : s === "eternity" ? { sw: 2.6, dash: "0.01 2.4" } : s === "halfeternity" ? { sw: 2.2 } : { sw: isBand ? 2.2 : 1.4 };
+  return (
+    <svg className="ri" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round">
+      <ellipse cx="12" cy={isBand ? 13 : 16} rx={isBand ? 7 : 6.5} ry={isBand ? 5.5 : 4.5} strokeWidth={band.sw} strokeDasharray={band.dash} />
+      {s === "halfeternity" && <path d="M6.2 10.4Q12 5.6 17.8 10.4" strokeWidth="2.6" strokeDasharray="0.01 2.3" stroke="currentColor" opacity=".55" />}
+      {top}
+    </svg>
+  );
 }
