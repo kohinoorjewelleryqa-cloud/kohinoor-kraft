@@ -48,7 +48,7 @@ export default async function SiteLayout({ children, params }: { children: React
         <Suspense fallback={null}><Motion /></Suspense>
         {demo && <div className="demo-bar">Demo mode: sample designs. Connect Supabase to use real data.</div>}
         <Header lang={lang} settings={settings} />
-        <div className="page-in">{children}</div>
+        {children}
         <Footer lang={lang} settings={settings} />
         <a className="wa-float" href={`https://wa.me/${settings.whatsapp}`} target="_blank" rel="noopener" aria-label={t(lang).whatsapp}>
           <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.4 14.1c-.2.6-1.3 1.2-1.8 1.3-.5.1-1 .1-3.3-.8a11.6 11.6 0 0 1-4.6-4.1c-.4-.5-1-1.6-1-2.8 0-1.3.7-2 .9-2.2.3-.3.6-.4.8-.4h.6c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.3.5-.4.5c-.1.1-.3.3-.1.6.2.3.7 1.2 1.6 1.9 1.1.9 2 1.2 2.3 1.4.3.1.5.1.6-.1l.9-1c.2-.3.4-.2.6-.1l2 .9c.3.1.4.2.5.3.1.2.1.7-.1 1.2z"/></svg>

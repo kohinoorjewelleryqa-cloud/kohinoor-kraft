@@ -19,6 +19,14 @@ export default function Motion() {
   const path = usePathname();
   const qs = useSearchParams()?.toString();
 
+  // The header gains a soft shadow once the page moves, so it reads as floating above the content.
+  useEffect(() => {
+    const root = document.documentElement;
+    const on = () => root.toggleAttribute("data-scrolled", window.scrollY > 8);
+    on(); window.addEventListener("scroll", on, { passive: true });
+    return () => window.removeEventListener("scroll", on);
+  }, []);
+
   useEffect(() => {
     const root = document.documentElement;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) { root.classList.remove("motion"); return; }

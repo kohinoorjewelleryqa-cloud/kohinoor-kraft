@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { optionFor } from "@/lib/stones";
 import Customiser from "@/components/Customiser";
 import { getCatalog, getDesign } from "@/lib/catalog";
-import { KARATS, qar } from "@/lib/gold";
+import { KARATS } from "@/lib/gold";
 import type { Lang } from "@/lib/i18n";
 import { href, pick, t } from "@/lib/i18n";
 
@@ -38,21 +38,19 @@ export default async function DesignPage({ params, searchParams }: { params: Pro
   const n = (v: number) => v.toLocaleString(lang === "ar" ? "ar-QA" : "en-US");
   const karatList = design.karats.map((k) => KARATS.find((x) => x.id === k)?.[lang] ?? k).join(lang === "ar" ? "، " : ", ");
   return (
-    <main className="wrap page">
-      <nav className="crumbs" aria-label="Breadcrumb">
-        <Link href={href(lang, "/designs")}>{d.nav.designs}</Link><span aria-hidden="true">/</span>
-        {cat && <><Link href={`${href(lang, "/designs")}?cat=${cat.slug}`}>{pick(cat, "name", lang)}</Link><span aria-hidden="true">/</span></>}
-        <span>{pick(design, "name", lang)}</span>
-      </nav>
-      <header className="dhead">
-        <h1>{pick(design, "name", lang)}</h1>
-        {pick(design, "description", lang) && <p>{pick(design, "description", lang)}</p>}
-        <ul className="facts">
-          <li>{d.design.karatsAvailable} {karatList}</li>
-          <li>{d.design.weight}: <bdi className="num">{n(design.weight_min)}–{n(design.weight_max)} {d.design.grams}</bdi></li>
-        </ul>
-      </header>
-      <Customiser lang={lang} d={d} design={design} categories={categories} rates={settings.rates} weeks={weeks} initial={{ name: sp.name?.slice(0, 20), font: sp.font, color: sp.color, stone: optionFor(design, sp.stone, stones)?.id }} stones={stones} />
+    <main className="cf-page">
+      <Customiser lang={lang} d={d} design={design} categories={categories} rates={settings.rates} weeks={weeks} initial={{ name: sp.name?.slice(0, 20), font: sp.font, color: sp.color, stone: optionFor(design, sp.stone, stones)?.id }} stones={stones}
+        intro={
+          <header className="cf-intro">
+            <nav className="crumbs" aria-label="Breadcrumb">
+              <Link href={href(lang, "/designs")}>{d.nav.designs}</Link><span aria-hidden="true">/</span>
+              {cat && <><Link href={`${href(lang, "/designs")}?cat=${cat.slug}`}>{pick(cat, "name", lang)}</Link></>}
+            </nav>
+            <h1>{pick(design, "name", lang)}</h1>
+            {pick(design, "description", lang) && <p>{pick(design, "description", lang)}</p>}
+            <p className="cf-facts">{d.design.karatsAvailable} {karatList} <span aria-hidden="true">/</span> <bdi className="num">{n(design.weight_min)}–{n(design.weight_max)} {d.design.grams}</bdi></p>
+          </header>
+        } />
     </main>
   );
 }
