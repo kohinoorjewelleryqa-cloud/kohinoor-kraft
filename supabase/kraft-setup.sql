@@ -21,8 +21,8 @@ create policy "read own admin row" on admins for select using (user_id = auth.ui
 -- ---------------------------------------------------------------- tables
 create table if not exists kraft_settings (
   id int primary key default 1 check (id = 1),
-  phone text not null default '+974 5068 3627',
-  whatsapp text not null default '97450683627',
+  phone text not null default '+974 5068 3626',
+  whatsapp text not null default '97450683626',
   email text not null default 'contact@kohinoorjewelleryqa.shop',
   address_en text not null default 'Gold Center, Old Gold Souq (beside Al Fardan), Old Al Ghanim, Doha, Qatar',
   address_ar text not null default 'جولد سنتر، سوق الذهب القديم (بجانب الفردان)، الغانم القديم، الدوحة، قطر',

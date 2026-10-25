@@ -5,8 +5,8 @@ import { DEFAULT_RATES } from "./gold";
 import type { Settings } from "./types";
 
 export const DEMO_SETTINGS: Settings = {
-  phone: "+974 5068 3627",
-  whatsapp: "97450683627",
+  phone: "+974 5068 3626",
+  whatsapp: "97450683626",
   email: "contact@kohinoorjewelleryqa.shop",
   address_en: "Gold Center, Old Gold Souq (beside Al Fardan), Old Al Ghanim, Doha, Qatar",
   address_ar: "جولد سنتر، سوق الذهب القديم (بجانب الفردان)، الغانم القديم، الدوحة، قطر",
