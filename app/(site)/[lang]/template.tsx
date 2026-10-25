@@ -1,4 +1,4 @@
-// Re-mounts on every page change, so each new page settles in gently.
+// Not used: pages already fade in from the layout. Kept empty so it changes nothing.
 export default function SiteTemplate({ children }: { children: React.ReactNode }) {
-  return <div className="page-in">{children}</div>;
+  return <>{children}</>;
 }
