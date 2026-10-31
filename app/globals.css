@@ -31,7 +31,7 @@ h1,h2,h3{font-family:var(--f-head);font-weight:400;line-height:1.15;margin:0}
 /* buttons */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid transparent;border-radius:999px;padding:12px 22px;font-weight:600;font-size:15px;text-decoration:none;cursor:pointer;transition:background .15s,border-color .15s;line-height:1.2}
 .btn.sm{padding:9px 16px;font-size:14px}
-.btn.block{width:100%}
+.btn.block{width:100%;padding-block:13px}
 .btn.gold{background:var(--gold);color:#1B1206}
 .btn.gold:hover{background:#C9993A}
 .btn.line{border-color:var(--line);background:var(--surface)}
