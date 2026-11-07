@@ -20,11 +20,14 @@ async function load(): Promise<Omit<Catalog, "demo">> {
   const settings = { ...DEMO_SETTINGS, ...(s.data ?? {}) } as Settings;
   settings.rates = { ...DEFAULT_RATES, ...(s.data?.rates ?? {}) };
   const num = (v: unknown, f = 0) => (v === null || v === undefined || v === "" ? f : Number(v));
+  const categories = (c.data as Category[]) ?? [];
+  const catArt = Object.fromEntries(categories.map((k) => [k.slug, (k.art || "").split(":")[0]]));
   return {
     settings,
-    categories: (c.data as Category[]) ?? [],
+    categories,
     designs: ((d.data as Design[]) ?? []).map((x) => ({
       ...x,
+      cat_art: catArt[x.category] || undefined,
       images: x.images ?? [], karats: x.karats ?? [], colors: x.colors ?? [], sizes: x.sizes ?? [], stones: x.stones ?? [],
       weight_min: num(x.weight_min), weight_max: num(x.weight_max), making_per_g: num(x.making_per_g), engraving_max: num(x.engraving_max, 12), art_variant: num(x.art_variant),
     })),
@@ -34,7 +37,7 @@ async function load(): Promise<Omit<Catalog, "demo">> {
   };
 }
 
-const cached = unstable_cache(load, ["kraft-catalog-v3"], { tags: ["kraft"], revalidate: 600 });
+const cached = unstable_cache(load, ["kraft-catalog-v4"], { tags: ["kraft"], revalidate: 600 });
 
 export async function getCatalog(): Promise<Catalog> {
   if (!supabaseConfigured) return { settings: DEMO_SETTINGS, categories: DEMO_CATEGORIES, designs: DEMO_DESIGNS, portfolio: [], stones: DEFAULT_STONES, demo: true };

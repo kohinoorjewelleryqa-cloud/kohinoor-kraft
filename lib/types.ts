@@ -41,6 +41,8 @@ export type Design = {
   art_variant: number;
   /** 3D ring styles shown for this design (empty = photo only). Missing before kraft-ring-3d.sql is run. */
   ring_3d?: string[] | null;
+  /** Drawing type of the design's category (filled in when the catalogue loads). */
+  cat_art?: string;
 };
 
 export type PortfolioItem = { id: string; title_en: string; title_ar: string; image: string; category: string | null; sort_order: number };

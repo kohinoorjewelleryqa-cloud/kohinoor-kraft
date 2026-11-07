@@ -32,7 +32,7 @@ export default function DesignsAdmin() {
         <tbody>
           {list.map((d) => (
             <tr key={d.id} className="click" onClick={() => router.push(`/admin/designs/${d.id}`)}>
-              <td><span className="th-img">{d.images?.[0] ? <img src={d.images[0]} alt="" /> : <span style={{ display: "contents" }} dangerouslySetInnerHTML={{ __html: artSvg(CATEGORY_ART[d.category] ?? "pendants", "yellow", "none", d.art_variant ?? 0) }} />}</span></td>
+              <td><span className="th-img">{d.images?.[0] ? <img src={d.images[0]} alt="" /> : <span style={{ display: "contents" }} dangerouslySetInnerHTML={{ __html: artSvg(CATEGORY_ART[d.category] ?? cats.find((c) => c.slug === d.category)?.art?.split(":")[0] ?? "pendants", "yellow", "none", d.art_variant ?? 0) }} />}</span></td>
               <td><b>{d.name_en}</b><br /><small dir="rtl" style={{ color: "var(--muted)" }}>{d.name_ar}</small></td>
               <td>{cats.find((c) => c.slug === d.category)?.name_en ?? d.category}</td>
               <td className="num">{d.weight_min}–{d.weight_max} g</td>

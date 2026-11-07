@@ -202,6 +202,10 @@ h1,h2,h3{font-family:var(--f-head);font-weight:400;line-height:1.15;margin:0}
 .tabs::-webkit-scrollbar{display:none}
 .tabs a{white-space:nowrap;text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:7px 16px;font-size:14.5px;font-weight:500;background:var(--surface)}
 .tabs a[aria-current="page"]{background:var(--green);color:#fff;border-color:var(--green)}
+.tabs button{white-space:nowrap;font:inherit;color:inherit;cursor:pointer;border:1px solid var(--line);border-radius:999px;padding:7px 16px;font-size:14.5px;font-weight:500;background:var(--surface)}
+.tabs button[aria-selected="true"]{background:var(--green);color:#fff;border-color:var(--green)}
+.hd-item{display:contents}
+.hd-more{display:flex;justify-content:center;margin-top:28px}
 .create-strip{margin-top:40px;background:var(--tile);border-radius:var(--r);padding:22px 24px;display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between}
 .create-strip p{margin:0;max-width:60ch}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:clamp(18px,2.4vw,26px)}

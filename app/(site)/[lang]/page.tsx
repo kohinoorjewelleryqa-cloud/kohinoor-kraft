@@ -8,6 +8,7 @@ import { budgetCounts, budgetParts, designCount } from "@/lib/budget";
 import { gemShades, stoneAbout, stoneCounts, stoneName } from "@/lib/stones";
 import Gem from "@/components/Gem";
 import DesignCard from "@/components/DesignCard";
+import HomeDesigns from "@/components/HomeDesigns";
 import { getCatalog } from "@/lib/catalog";
 import { artSvg, parseArt } from "@/lib/art";
 import { KARATS, RATE_KEYS, buyRates, qar } from "@/lib/gold";
@@ -19,7 +20,7 @@ export default async function Home({ params }: { params: Promise<{ lang: Lang }>
   const { lang } = await params;
   const d = t(lang);
   const { categories, designs, portfolio, settings, stones: stoneTypes } = await getCatalog();
-  const featured = designs.filter((x) => x.is_featured).concat(designs.filter((x) => !x.is_featured)).slice(0, 10);
+  const ordered = designs.filter((x) => x.is_featured).concat(designs.filter((x) => !x.is_featured));
   const budgets = budgetCounts(designs, settings.rates);
   const buy = buyRates(settings.rates);
   const stones = stoneCounts(designs, stoneTypes);
@@ -41,6 +42,14 @@ export default async function Home({ params }: { params: Promise<{ lang: Lang }>
           <HeroName lang={lang} labels={{ tryName: d.hero.tryName, placeholder: d.hero.namePlaceholder, start: d.hero.start, font: d.design.font, color: d.design.color }} />
         </div>
       </section>
+
+      <HomeDesigns
+        title={d.sections.designs}
+        tabs={categories.map((c) => ({ slug: c.slug, name: pick(c, "name", lang) }))}
+        items={ordered.map((x) => ({ id: x.id, cat: x.category, node: <DesignCard d={x} lang={lang} rates={settings.rates} /> }))}
+        labels={{ all: d.all, more: d.sections.more, viewAll: d.sections.viewAll }}
+        viewAllHref={href(lang, "/designs")}
+      />
 
       <div className="marquee" aria-hidden="true">
         <div className="mq-track">
@@ -115,13 +124,6 @@ export default async function Home({ params }: { params: Promise<{ lang: Lang }>
           </div>
         </section>
       )}
-
-      <section className="block">
-        <div className="wrap">
-          <div className="sh-row"><h2 className="sh">{d.sections.featured}</h2><Link href={href(lang, "/designs")}>{d.sections.viewAll}</Link></div>
-          <div className="rail">{featured.map((x) => <DesignCard key={x.id} d={x} lang={lang} rates={settings.rates} />)}</div>
-        </div>
-      </section>
 
       <section className="craft">
         <div className="craft-img"><Pic p={PHOTOS.craft} lang={lang} ratio={4 / 3} /></div>

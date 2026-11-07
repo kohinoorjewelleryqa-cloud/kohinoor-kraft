@@ -40,7 +40,7 @@ const en = {
       ["We handcraft it", "Your piece is made, polished and hallmarked, then ready to collect or deliver."],
     ],
   },
-  sections: { stones: "Shop by stone", stonesText: "Set your piece with the stone you love. Every stone can be chosen on the design.", anyStone: "Any stone", stoneFrom: "Stone from", budget: "Shop by budget", anyPrice: "Any price", categories: "Shop by type", featured: "Popular designs", portfolio: "Made by Kohinoor Kraft", viewAll: "View all", rates: "Today's gold rate", faq: "Questions" },
+  sections: { stones: "Shop by stone", stonesText: "Set your piece with the stone you love. Every stone can be chosen on the design.", anyStone: "Any stone", stoneFrom: "Stone from", budget: "Shop by budget", anyPrice: "Any price", categories: "Shop by type", featured: "Popular designs", designs: "Our designs", more: "Show more designs", portfolio: "Made by Kohinoor Kraft", viewAll: "View all", rates: "Today's gold rate", faq: "Questions" },
   trust: [
     ["Hallmarked gold", "22K, 21K and 18K, stamped on every piece"],
     ["Clear pricing", "One all-in price on today's gold rate, workmanship included"],
@@ -213,7 +213,7 @@ const ar: Dict = {
       ["نصوغها يدويًا", "تُصنع قطعتك وتُلمّع وتُدمغ، ثم تصبح جاهزة للاستلام أو التوصيل."],
     ],
   },
-  sections: { stones: "تسوّق حسب الحجر", stonesText: "رصّع قطعتك بالحجر الذي تحبه. يمكنك اختيار الحجر من صفحة التصميم.", anyStone: "كل الأحجار", stoneFrom: "الحجر من", budget: "تسوّق حسب الميزانية", anyPrice: "كل الأسعار", categories: "تسوّق حسب النوع", featured: "تصاميم مميزة", portfolio: "من صنع كوهينور كرافت", viewAll: "عرض الكل", rates: "سعر الذهب اليوم", faq: "أسئلة" },
+  sections: { stones: "تسوّق حسب الحجر", stonesText: "رصّع قطعتك بالحجر الذي تحبه. يمكنك اختيار الحجر من صفحة التصميم.", anyStone: "كل الأحجار", stoneFrom: "الحجر من", budget: "تسوّق حسب الميزانية", anyPrice: "كل الأسعار", categories: "تسوّق حسب النوع", featured: "تصاميم مميزة", designs: "تصاميمنا", more: "عرض المزيد من التصاميم", portfolio: "من صنع كوهينور كرافت", viewAll: "عرض الكل", rates: "سعر الذهب اليوم", faq: "أسئلة" },
   trust: [
     ["ذهب مدموغ", "عيار ٢٢ و٢١ و١٨، مدموغ على كل قطعة"],
     ["أسعار واضحة", "سعر شامل حسب سعر الذهب اليوم، يشمل الصياغة"],
