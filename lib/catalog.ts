@@ -37,7 +37,7 @@ async function load(): Promise<Omit<Catalog, "demo">> {
   };
 }
 
-const cached = unstable_cache(load, ["kraft-catalog-v4"], { tags: ["kraft"], revalidate: 600 });
+const cached = unstable_cache(load, ["kraft-catalog-v5"], { tags: ["kraft"], revalidate: 600 });
 
 export async function getCatalog(): Promise<Catalog> {
   if (!supabaseConfigured) return { settings: DEMO_SETTINGS, categories: DEMO_CATEGORIES, designs: DEMO_DESIGNS, portfolio: [], stones: DEFAULT_STONES, demo: true };

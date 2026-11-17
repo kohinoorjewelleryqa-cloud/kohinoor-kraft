@@ -7,6 +7,7 @@ import { getCatalog } from "@/lib/catalog";
 import { budgetCounts, budgetLabel, findBudget, fromPrice, inBudget } from "@/lib/budget";
 import { findStone, optionFor, stoneCounts, stoneName } from "@/lib/stones";
 import Gem from "@/components/Gem";
+import { mainCats, mainOf, slugsUnder, subCats } from "@/lib/cats";
 import type { Lang } from "@/lib/i18n";
 import { href, pick, t } from "@/lib/i18n";
 
@@ -21,23 +22,34 @@ export default async function Designs({ params, searchParams }: { params: Promis
   const d = t(lang);
   const { categories, designs, settings, stones: stoneTypes } = await getCatalog();
   const current = categories.find((c) => c.slug === cat);
+  const main = current ? mainOf(categories, current.slug) : undefined;
+  const subs = main ? subCats(categories, main.slug) : [];
+  const isSub = !!current && !!main && current.slug !== main.slug;
+  const inCurrent = current ? new Set(slugsUnder(categories, current.slug)) : null;
+  const inCurrentCat = (x: (typeof designs)[number]) => !inCurrent || inCurrent.has(x.category);
   const budget = findBudget(budgetId);
   const stone = findStone(stoneTypes, stoneId);
-  const inCat = (current ? designs.filter((x) => x.category === current.slug) : designs).filter((x) => !stone || optionFor(x, stone.id, stoneTypes));
+  const inCat = designs.filter(inCurrentCat).filter((x) => !stone || optionFor(x, stone.id, stoneTypes));
   // With a budget chosen: only designs starting within it, cheapest first.
   const priceOf = (x: (typeof designs)[number]) => fromPrice(x, settings.rates) + (optionFor(x, stone?.id, stoneTypes)?.price ?? 0);
   const list = budget ? inCat.filter((x) => inBudget(budget, priceOf(x))).sort((a, b) => priceOf(a) - priceOf(b)) : inCat;
   const budgets = budgetCounts(inCat, settings.rates, budget?.id);
-  const stones = stoneCounts(current ? designs.filter((x) => x.category === current.slug) : designs, stoneTypes, stone?.id);
+  const stones = stoneCounts(designs.filter(inCurrentCat), stoneTypes, stone?.id);
   const link = (c?: string, b?: string, st: string | undefined = stone?.id) => { const q = new URLSearchParams(); if (c) q.set("cat", c); if (b) q.set("budget", b); if (st) q.set("stone", st); const s = q.toString(); return `${href(lang, "/designs")}${s ? `?${s}` : ""}`; };
   return (
     <>
-    <PageHero p={(current && CATEGORY_PHOTOS[current.slug]) || PHOTOS.worn} lang={lang} title={current ? pick(current, "name", lang) : d.nav.designs} text={[stone && stoneName(stone, lang), budget && budgetLabel(budget, lang)].filter(Boolean).join(" · ") || undefined} />
+    <PageHero p={(current && CATEGORY_PHOTOS[current.slug]) || (main && CATEGORY_PHOTOS[main.slug]) || PHOTOS.worn} lang={lang} title={current ? (isSub ? `${pick(main!, "name", lang)} · ${pick(current, "name", lang)}` : pick(current, "name", lang)) : d.nav.designs} text={[stone && stoneName(stone, lang), budget && budgetLabel(budget, lang)].filter(Boolean).join(" · ") || undefined} />
     <main className="wrap page">
       <nav className="tabs" aria-label={d.nav.designs}>
         <Link href={link(undefined, budget?.id)} aria-current={!current ? "page" : undefined}>{d.all}</Link>
-        {categories.map((c) => <Link key={c.slug} href={link(c.slug, budget?.id)} aria-current={current?.slug === c.slug ? "page" : undefined}>{pick(c, "name", lang)}</Link>)}
+        {mainCats(categories).map((c) => <Link key={c.slug} href={link(c.slug, budget?.id)} aria-current={main?.slug === c.slug ? "page" : undefined}>{pick(c, "name", lang)}</Link>)}
       </nav>
+      {main && subs.length > 0 && (
+        <nav className="subtabs" aria-label={pick(main, "name", lang)}>
+          <Link href={link(main.slug, budget?.id)} aria-current={!isSub ? "page" : undefined}>{d.all}</Link>
+          {subs.map((c) => <Link key={c.slug} href={link(c.slug, budget?.id)} aria-current={current?.slug === c.slug ? "page" : undefined}>{pick(c, "name", lang)}</Link>)}
+        </nav>
+      )}
       {(stones.length > 0 || stone) && (
         <nav className="price-chips stone-chips" aria-label={d.sections.stones}>
           <span>{d.sections.stones}</span>

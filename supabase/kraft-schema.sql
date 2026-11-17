@@ -40,7 +40,8 @@ create table if not exists kraft_categories (
   name_en text not null,
   name_ar text not null,
   art text not null default 'pendants:0',
-  sort_order int not null default 0
+  sort_order int not null default 0,
+  parent text references kraft_categories(slug) on update cascade on delete restrict
 );
 
 create table if not exists kraft_designs (

@@ -9,6 +9,7 @@ import { gemShades, stoneAbout, stoneCounts, stoneName } from "@/lib/stones";
 import Gem from "@/components/Gem";
 import DesignCard from "@/components/DesignCard";
 import HomeDesigns from "@/components/HomeDesigns";
+import { mainCats, mainOf } from "@/lib/cats";
 import { getCatalog } from "@/lib/catalog";
 import { artSvg, parseArt } from "@/lib/art";
 import { KARATS, RATE_KEYS, buyRates, qar } from "@/lib/gold";
@@ -20,6 +21,7 @@ export default async function Home({ params }: { params: Promise<{ lang: Lang }>
   const { lang } = await params;
   const d = t(lang);
   const { categories, designs, portfolio, settings, stones: stoneTypes } = await getCatalog();
+  const mains = mainCats(categories);
   const ordered = designs.filter((x) => x.is_featured).concat(designs.filter((x) => !x.is_featured));
   const budgets = budgetCounts(designs, settings.rates);
   const buy = buyRates(settings.rates);
@@ -45,8 +47,8 @@ export default async function Home({ params }: { params: Promise<{ lang: Lang }>
 
       <HomeDesigns
         title={d.sections.designs}
-        tabs={categories.map((c) => ({ slug: c.slug, name: pick(c, "name", lang) }))}
-        items={ordered.map((x) => ({ id: x.id, cat: x.category, node: <DesignCard d={x} lang={lang} rates={settings.rates} /> }))}
+        tabs={mains.map((c) => ({ slug: c.slug, name: pick(c, "name", lang) }))}
+        items={ordered.map((x) => ({ id: x.id, cat: mainOf(categories, x.category)?.slug ?? x.category, node: <DesignCard d={x} lang={lang} rates={settings.rates} /> }))}
         labels={{ all: d.all, more: d.sections.more, viewAll: d.sections.viewAll }}
         viewAllHref={href(lang, "/designs")}
       />
@@ -76,7 +78,7 @@ export default async function Home({ params }: { params: Promise<{ lang: Lang }>
         <div className="wrap">
           <div className="sh-row"><h2 className="sh">{d.sections.categories}</h2><Link href={href(lang, "/designs")}>{d.sections.viewAll}</Link></div>
           <div className="cats">
-            {categories.map((c) => { const [type, v] = parseArt(c.art); const photo = CATEGORY_PHOTOS[c.slug]; return (
+            {mains.map((c) => { const [type, v] = parseArt(c.art); const photo = CATEGORY_PHOTOS[c.slug]; return (
               <Link key={c.slug} href={`${href(lang, "/designs")}?cat=${c.slug}`} className="cat">
                 {photo ? <span className="cat-c photo"><Pic p={photo} lang={lang} size="small" ratio={1} alt="" /></span>
                   : c.slug === "name-jewellery" ? <span className="cat-c name"><NamePendant text={lang === "ar" ? "نور" : "Noor"} /></span>

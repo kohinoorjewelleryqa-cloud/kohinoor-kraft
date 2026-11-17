@@ -8,6 +8,7 @@ import { gemShades, stoneLook, stoneName, stoneTypeOf, type StoneType } from "@/
 import Ring3D from "./ring/Ring3D";
 import { RING_STYLES, metalColor, ringStylesFor, type RingStyle } from "@/lib/ring3d";
 import { COLORS, ENGRAVING_FONTS, KARATS, colorAllowed, estimate, isArabicText, qar } from "@/lib/gold";
+import { mainOf, placeableCats } from "@/lib/cats";
 import type { Dict, Lang } from "@/lib/i18n";
 import { href, pick } from "@/lib/i18n";
 import type { Category, Design } from "@/lib/types";
@@ -56,7 +57,9 @@ export default function Customiser({ lang, d, design, categories, rates, weeks, 
   const [ringStyle, setRingStyle] = useState<RingStyle>(ringStyles?.[0] ?? "round");
   const [text, setText] = useState(initial?.name ?? "");
   const [font, setFont] = useState(initial?.font ?? "");
-  const [type, setType] = useState(categories[0]?.slug ?? "");
+  const groups = placeableCats(categories);
+  const typeLabel = (slug: string) => { const c = categories.find((x) => x.slug === slug); if (!c) return undefined; const m = mainOf(categories, slug); return m && m.slug !== c.slug ? `${pick(m, "name", lang)} · ${pick(c, "name", lang)}` : pick(c, "name", lang); };
+  const [type, setType] = useState(groups[0]?.items[0]?.slug ?? "");
   const [photos, setPhotos] = useState<{ file: File; url: string }[]>([]);
   const [err, setErr] = useState("");
   const [done, setDone] = useState<Extract<EnquiryResult, { ok: true }> | null>(null);
@@ -113,7 +116,7 @@ export default function Customiser({ lang, d, design, categories, rates, weeks, 
       // 2) send the request
       const notes = [ringStyles && ringStyles.length > 1 && `${D.ringStyle}: ${RING_STYLES[ringStyle][lang]}`, v("budget") && `${d.create.budget}: ${v("budget")}`, v("notes")].filter(Boolean).join("\n");
       const r = await submitEnquiry({
-        lang, designSlug: design?.slug, customType: design ? undefined : categories.find((c) => c.slug === type)?.[lang === "ar" ? "name_ar" : "name_en"],
+        lang, designSlug: design?.slug, customType: design ? undefined : typeLabel(type),
         name: v("name"), phone: v("phone"), email: v("email"),
         karat, color: effColor, size: size || undefined, weight: design ? weight : undefined, stone: stone || undefined,
         engraving: engravable ? text : undefined, font: engravable && text ? curFont : undefined, notes, photos: paths,
@@ -188,7 +191,9 @@ export default function Customiser({ lang, d, design, categories, rates, weeks, 
           <div className="field">
             <label htmlFor="type">{d.create.type}</label>
             <select id="type" value={type} onChange={(e) => setType(e.target.value)}>
-              {categories.map((c) => <option key={c.slug} value={c.slug}>{pick(c, "name", lang)}</option>)}
+              {groups.map(({ main, items }) => items[0]?.slug === main.slug
+                ? <option key={main.slug} value={main.slug}>{pick(main, "name", lang)}</option>
+                : <optgroup key={main.slug} label={pick(main, "name", lang)}>{items.map((c) => <option key={c.slug} value={c.slug}>{pick(c, "name", lang)}</option>)}</optgroup>)}
             </select>
           </div>
         )}

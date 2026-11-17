@@ -34,7 +34,7 @@ export const viewport: Viewport = { width: "device-width", initialScale: 1, maxi
 export default async function SiteLayout({ children, params }: { children: React.ReactNode; params: Promise<{ lang: string }> }) {
   const { lang } = await params;
   if (!isLang(lang)) notFound();
-  const { settings, demo } = await getCatalog();
+  const { settings, demo, categories } = await getCatalog();
   return (
     <html lang={lang} dir={dirOf(lang)}>
       <head>
@@ -47,7 +47,7 @@ export default async function SiteLayout({ children, params }: { children: React
         <NavProgress />
         <Suspense fallback={null}><Motion /></Suspense>
         {demo && <div className="demo-bar">Demo mode: sample designs. Connect Supabase to use real data.</div>}
-        <Header lang={lang} settings={settings} />
+        <Header lang={lang} settings={settings} categories={categories} />
         <div className="page-in">{children}</div>
         <Footer lang={lang} settings={settings} />
         <a className="wa-float" href={`https://wa.me/${settings.whatsapp}`} target="_blank" rel="noopener" aria-label={t(lang).whatsapp}>

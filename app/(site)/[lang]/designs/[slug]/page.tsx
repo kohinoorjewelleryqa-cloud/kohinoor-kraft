@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { optionFor } from "@/lib/stones";
 import Customiser from "@/components/Customiser";
 import { getCatalog, getDesign } from "@/lib/catalog";
+import { mainOf } from "@/lib/cats";
 import { KARATS, qar } from "@/lib/gold";
 import type { Lang } from "@/lib/i18n";
 import { href, pick, t } from "@/lib/i18n";
@@ -34,6 +35,7 @@ export default async function DesignPage({ params, searchParams }: { params: Pro
   const d = t(lang);
   const { categories, settings, stones } = await getCatalog();
   const cat = categories.find((c) => c.slug === design.category);
+  const main = cat ? mainOf(categories, cat.slug) : undefined;
   const weeks: [number, number] = [Math.max(1, Math.round(settings.production_min_days / 7)), Math.max(1, Math.round(settings.production_max_days / 7))];
   const n = (v: number) => v.toLocaleString(lang === "ar" ? "ar-QA" : "en-US");
   const karatList = design.karats.map((k) => KARATS.find((x) => x.id === k)?.[lang] ?? k).join(lang === "ar" ? "، " : ", ");
@@ -41,6 +43,7 @@ export default async function DesignPage({ params, searchParams }: { params: Pro
     <main className="wrap page">
       <nav className="crumbs" aria-label="Breadcrumb">
         <Link href={href(lang, "/designs")}>{d.nav.designs}</Link><span aria-hidden="true">/</span>
+        {main && main.slug !== cat?.slug && <><Link href={`${href(lang, "/designs")}?cat=${main.slug}`}>{pick(main, "name", lang)}</Link><span aria-hidden="true">/</span></>}
         {cat && <><Link href={`${href(lang, "/designs")}?cat=${cat.slug}`}>{pick(cat, "name", lang)}</Link><span aria-hidden="true">/</span></>}
         <span>{pick(design, "name", lang)}</span>
       </nav>

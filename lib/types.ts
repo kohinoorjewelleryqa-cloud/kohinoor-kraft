@@ -13,7 +13,8 @@ export type Settings = {
   production_max_days: number;
 };
 
-export type Category = { slug: string; name_en: string; name_ar: string; art: string; sort_order: number };
+/** `parent`: the main category this one sits under (Women, Men…); empty for a main category. */
+export type Category = { slug: string; name_en: string; name_ar: string; art: string; sort_order: number; parent?: string | null };
 
 export type StoneOption = { id: string; name_en: string; name_ar: string; price: number };
 

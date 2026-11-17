@@ -40,7 +40,8 @@ create table if not exists kraft_categories (
   name_en text not null,
   name_ar text not null,
   art text not null default 'pendants:0',
-  sort_order int not null default 0
+  sort_order int not null default 0,
+  parent text references kraft_categories(slug) on update cascade on delete restrict
 );
 
 create table if not exists kraft_designs (
@@ -190,22 +191,36 @@ exception when duplicate_object then null; when undefined_object then null; end 
 -- ---------------------------------------------------------------- starting data
 insert into kraft_settings (id) values (1) on conflict (id) do nothing;
 
-insert into kraft_categories (slug, name_en, name_ar, art, sort_order) values
- ('name-jewellery', 'Name jewellery', 'مجوهرات بالأسماء', 'pendants:2', 1),
- ('rings', 'Rings', 'خواتم', 'rings:1', 2),
- ('bangles', 'Bangles & bracelets', 'أساور وبناجر', 'bangles:2', 3),
- ('earrings', 'Earrings', 'أقراط', 'earrings:0', 4),
- ('pendants', 'Pendants', 'دلايات', 'pendants:0', 5),
- ('sets', 'Bridal sets', 'أطقم العرائس', 'sets:1', 6),
- ('men', 'For men', 'للرجال', 'chains:2', 7)
+insert into kraft_categories (slug, name_en, name_ar, art, sort_order, parent) values
+ ('women', 'Women', 'للنساء', 'necklaces:0', 1, null),
+ ('men', 'Men', 'للرجال', 'chains:2', 2, null),
+ ('kids', 'Kids', 'للأطفال', 'bracelets:0', 3, null),
+ ('gifting', 'Gifting', 'هدايا', 'pendants:3', 4, null),
+ ('sets', 'Bridal sets', 'أطقم العرائس', 'sets:1', 5, null),
+ ('name-jewellery', 'Custom necklaces', 'قلائد مخصصة', 'pendants:2', 1, 'women'),
+ ('earrings', 'Earrings', 'أقراط', 'earrings:0', 2, 'women'),
+ ('rings', 'Rings', 'خواتم', 'rings:1', 3, 'women'),
+ ('bangles', 'Bracelets & bangles', 'أساور وبناجر', 'bangles:2', 4, 'women'),
+ ('women-anklets', 'Anklets', 'خلاخيل', 'anklets:0', 5, 'women'),
+ ('pendants', 'Pendants', 'دلايات', 'pendants:0', 6, 'women'),
+ ('men-necklaces', 'Necklaces', 'قلائد', 'chains:2', 1, 'men'),
+ ('men-rings', 'Rings', 'خواتم', 'rings:3', 2, 'men'),
+ ('men-bracelets', 'Bracelets', 'أساور', 'bracelets:1', 3, 'men'),
+ ('men-cuffs', 'Hand cuffs', 'أساور كف', 'bangles:0', 4, 'men'),
+ ('kids-necklaces', 'Necklaces', 'قلائد', 'pendants:0', 1, 'kids'),
+ ('kids-earrings', 'Earrings', 'أقراط', 'earrings:1', 2, 'kids'),
+ ('kids-rings', 'Rings', 'خواتم', 'rings:2', 3, 'kids'),
+ ('kids-bracelets', 'Bracelets & bangles', 'أساور وبناجر', 'bracelets:0', 4, 'kids'),
+ ('kids-brooches', 'Brooches', 'بروشات', 'pendants:1', 5, 'kids'),
+ ('kids-anklets', 'Anklets', 'خلاخيل', 'anklets:1', 6, 'kids')
 on conflict (slug) do nothing;
 
 -- Sample designs (no photos yet: the site shows a drawing until you upload photos in the admin panel).
 insert into kraft_designs (slug, category, name_en, name_ar, description_en, description_ar, karats, colors, weight_min, weight_max, making_per_g, stones, engraving, engraving_max, sizes, is_featured, sort_order, art_variant) values
  ('arabic-name-necklace', 'name-jewellery', 'Arabic name necklace', 'قلادة اسم بالخط العربي', 'Your name, or a loved one''s, cut in flowing Arabic calligraphy and finished with a fine chain.', 'اسمك أو اسم من تحب بخط عربي انسيابي، مع سلسلة رفيعة.', '{"22","21","18"}', '{"yellow","rose","white"}', 3, 6, 60, '[]'::jsonb, true, 14, '{"16\"","18\"","20\"","22\""}', true, 1, 2),
  ('script-name-necklace', 'name-jewellery', 'Script name necklace', 'قلادة اسم بخط إنجليزي', 'A classic script nameplate in English, polished to a mirror shine.', 'لوحة اسم كلاسيكية بخط إنجليزي مزخرف ولمعة كالمرآة.', '{"22","21","18"}', '{"yellow","rose","white"}', 3, 5, 60, '[]'::jsonb, true, 12, '{"16\"","18\"","20\"","22\""}', true, 2, 2),
- ('name-bracelet', 'name-jewellery', 'Name bracelet', 'سوار بالاسم', 'A slim bracelet with a name or date at the centre.', 'سوار رفيع يتوسطه اسم أو تاريخ.', '{"22","21","18"}', '{"yellow","rose","white"}', 5, 9, 55, '[]'::jsonb, true, 12, '{"16 cm","17 cm","18 cm","19 cm"}', true, 3, 3),
- ('baby-name-bracelet', 'name-jewellery', 'Baby name bracelet', 'سوار مولود بالاسم', 'A first piece of gold for a newborn, with the baby''s name.', 'أول قطعة ذهب للمولود، تحمل اسمه.', '{"21","18"}', '{"yellow","rose"}', 2, 4, 60, '[]'::jsonb, true, 10, '{"11 cm","12 cm","13 cm"}', false, 4, 0),
+ ('name-bracelet', 'bangles', 'Name bracelet', 'سوار بالاسم', 'A slim bracelet with a name or date at the centre.', 'سوار رفيع يتوسطه اسم أو تاريخ.', '{"22","21","18"}', '{"yellow","rose","white"}', 5, 9, 55, '[]'::jsonb, true, 12, '{"16 cm","17 cm","18 cm","19 cm"}', true, 3, 3),
+ ('baby-name-bracelet', 'kids-bracelets', 'Baby name bracelet', 'سوار مولود بالاسم', 'A first piece of gold for a newborn, with the baby''s name.', 'أول قطعة ذهب للمولود، تحمل اسمه.', '{"21","18"}', '{"yellow","rose"}', 2, 4, 60, '[]'::jsonb, true, 10, '{"11 cm","12 cm","13 cm"}', false, 4, 0),
  ('signet-ring', 'rings', 'Initial signet ring', 'خاتم بالأحرف الأولى', 'A solid signet ring engraved with your initials.', 'خاتم متين محفور بالأحرف الأولى من اسمك.', '{"22","21","18"}', '{"yellow","rose","white"}', 6, 12, 45, '[]'::jsonb, true, 3, '{"6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22"}', true, 5, 1),
  ('wedding-bands', 'rings', 'Wedding bands, engraved inside', 'دبل زواج محفورة من الداخل', 'A matching pair, engraved inside with your names or wedding date. Price is for the pair.', 'زوج متطابق، يُحفر من الداخل بالأسماء أو تاريخ الزواج. السعر للزوج.', '{"22","21","18"}', '{"yellow","rose","white"}', 8, 14, 40, '[]'::jsonb, true, 20, '{"6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22"}', true, 6, 0),
  ('solitaire-ring', 'rings', 'Solitaire ring', 'خاتم سوليتير', 'A single stone held high in a fine band. Choose the stone you like.', 'حجر واحد مرفوع على حلقة رفيعة. اختر الحجر الذي تحبه.', '{"18","21"}', '{"yellow","rose","white"}', 3, 5, 70, '[{"id":"cz","name_en":"Cubic zirconia","name_ar":"زركون","price":60},{"id":"ruby","name_en":"Ruby","name_ar":"ياقوت أحمر","price":280},{"id":"emerald","name_en":"Emerald","name_ar":"زمرد","price":280},{"id":"diamond","name_en":"Natural diamond (about 0.10 ct)","name_ar":"ألماس طبيعي (حوالي ٠٫١٠ قيراط)","price":1200}]'::jsonb, false, 0, '{"6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22"}', false, 7, 2),
@@ -216,8 +231,8 @@ insert into kraft_designs (slug, category, name_en, name_ar, description_en, des
  ('calligraphy-pendant', 'pendants', 'Calligraphy pendant', 'دلاية بالخط العربي', 'A word or phrase that matters to you, in Arabic calligraphy: Mashallah, a name or a verse.', 'كلمة أو عبارة تهمك بالخط العربي: ما شاء الله، اسم أو آية.', '{"22","21","18"}', '{"yellow","rose","white"}', 3, 7, 60, '[]'::jsonb, true, 16, '{"16\"","18\"","20\"","22\""}', true, 12, 3),
  ('heart-pendant', 'pendants', 'Heart pendant with initials', 'دلاية قلب بالأحرف الأولى', 'A heart engraved with two initials, a lasting gift.', 'قلب محفور بحرفين، هدية تدوم.', '{"22","21","18"}', '{"yellow","rose","white"}', 2, 4, 55, '[{"id":"cz","name_en":"Cubic zirconia","name_ar":"زركون","price":60},{"id":"ruby","name_en":"Ruby","name_ar":"ياقوت أحمر","price":280},{"id":"emerald","name_en":"Emerald","name_ar":"زمرد","price":280},{"id":"diamond","name_en":"Natural diamond (about 0.10 ct)","name_ar":"ألماس طبيعي (حوالي ٠٫١٠ قيراط)","price":1200}]'::jsonb, true, 5, '{"16\"","18\"","20\"","22\""}', false, 13, 0),
  ('bridal-set', 'sets', 'Bridal necklace set', 'طقم عروس', 'Necklace and earrings designed with you for your wedding day. Bangles and ring can be added.', 'قلادة وأقراط نصممها معك ليوم زفافك، ويمكن إضافة بناجر وخاتم.', '{"22","21"}', '{"yellow"}', 60, 120, 30, '[{"id":"cz","name_en":"Cubic zirconia","name_ar":"زركون","price":60},{"id":"ruby","name_en":"Ruby","name_ar":"ياقوت أحمر","price":280},{"id":"emerald","name_en":"Emerald","name_ar":"زمرد","price":280},{"id":"diamond","name_en":"Natural diamond (about 0.10 ct)","name_ar":"ألماس طبيعي (حوالي ٠٫١٠ قيراط)","price":1200}]'::jsonb, false, 0, '{}', true, 14, 1),
- ('mens-chain', 'men', 'Men''s chain', 'سلسلة رجالية', 'A strong chain in the link style and length you choose.', 'سلسلة متينة بنوع الحلقات والطول الذي تختاره.', '{"22","21","18"}', '{"yellow","white"}', 20, 40, 25, '[]'::jsonb, false, 0, '{"20\"","22\"","24\""}', false, 15, 2),
- ('mens-ring', 'men', 'Men''s ring', 'خاتم رجالي', 'A bold ring for him, plain, engraved, or set with a stone.', 'خاتم رجالي بارز، سادة أو محفور أو مرصع بحجر.', '{"21","18"}', '{"yellow","white"}', 8, 14, 45, '[{"id":"cz","name_en":"Cubic zirconia","name_ar":"زركون","price":60},{"id":"ruby","name_en":"Ruby","name_ar":"ياقوت أحمر","price":280},{"id":"emerald","name_en":"Emerald","name_ar":"زمرد","price":280},{"id":"diamond","name_en":"Natural diamond (about 0.10 ct)","name_ar":"ألماس طبيعي (حوالي ٠٫١٠ قيراط)","price":1200}]'::jsonb, true, 10, '{"6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22"}', false, 16, 3),
+ ('mens-chain', 'men-necklaces', 'Men''s chain', 'سلسلة رجالية', 'A strong chain in the link style and length you choose.', 'سلسلة متينة بنوع الحلقات والطول الذي تختاره.', '{"22","21","18"}', '{"yellow","white"}', 20, 40, 25, '[]'::jsonb, false, 0, '{"20\"","22\"","24\""}', false, 15, 2),
+ ('mens-ring', 'men-rings', 'Men''s ring', 'خاتم رجالي', 'A bold ring for him, plain, engraved, or set with a stone.', 'خاتم رجالي بارز، سادة أو محفور أو مرصع بحجر.', '{"21","18"}', '{"yellow","white"}', 8, 14, 45, '[{"id":"cz","name_en":"Cubic zirconia","name_ar":"زركون","price":60},{"id":"ruby","name_en":"Ruby","name_ar":"ياقوت أحمر","price":280},{"id":"emerald","name_en":"Emerald","name_ar":"زمرد","price":280},{"id":"diamond","name_en":"Natural diamond (about 0.10 ct)","name_ar":"ألماس طبيعي (حوالي ٠٫١٠ قيراط)","price":1200}]'::jsonb, true, 10, '{"6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22"}', false, 16, 3),
  ('gold-studs', 'earrings', 'Gold stud earrings', 'أقراط ذهبية صغيرة', 'Small, light studs for every day: round, heart or star.', 'أقراط صغيرة وخفيفة للاستخدام اليومي: دائرة أو قلب أو نجمة.', '{"21","18"}', '{"yellow","rose","white"}', 1, 2.5, 50, '[]'::jsonb, false, 0, '{}', false, 17, 1),
  ('baby-ring', 'rings', 'Baby gold ring', 'خاتم ذهب للمولود', 'A tiny first ring for a baby, plain or with an initial.', 'خاتم صغير للمولود، سادة أو بحرف من اسمه.', '{"21","18"}', '{"yellow","rose"}', 1, 2, 55, '[]'::jsonb, true, 1, '{"Baby","Child"}', false, 18, 0),
  ('initial-charm', 'pendants', 'Initial charm', 'دلاية بالحرف الأول', 'A single letter in English or Arabic, light and easy to wear.', 'حرف واحد بالعربية أو الإنجليزية، خفيف وسهل الارتداء.', '{"22","21","18"}', '{"yellow","rose","white"}', 1, 2, 60, '[]'::jsonb, true, 1, '{"16\"","18\"","20\"","22\""}', false, 19, 1)
@@ -254,5 +269,5 @@ on conflict (id) do nothing;
 
 commit;
 
--- Check: should show 7 categories and 19 designs.
+-- Check: should show 21 categories and 19 designs.
 select (select count(*) from kraft_categories) as categories, (select count(*) from kraft_designs) as designs;

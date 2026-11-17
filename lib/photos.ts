@@ -25,6 +25,9 @@ export const CATEGORY_PHOTOS: Record<string, Photo> = {
   pendants: { id: "1569397288884-4d43d6738fbd", en: "Gold pendant", ar: "دلاية ذهبية" },
   sets: { id: "1758995115857-2de1eb6283d0", en: "Gold bridal set", ar: "طقم عروس ذهبي" },
   men: { id: "1780565336226-b53294a9592d", en: "Gold chains for men", ar: "سلاسل ذهبية للرجال" },
+  "men-necklaces": { id: "1780565336226-b53294a9592d", en: "Gold chains for men", ar: "سلاسل ذهبية للرجال" },
+  women: PHOTOS.worn,
+  gifting: PHOTOS.store,
 };
 
 /** Address of a photo at a given width (and height, cropped to fill). */

@@ -7,6 +7,7 @@ import { refreshShop } from "@/lib/admin";
 import { uploadPublic } from "@/lib/upload";
 import { COLORS, DEFAULT_RATES, KARATS, estimate, qar } from "@/lib/gold";
 import type { Category, Design, StoneOption } from "@/lib/types";
+import { placeableCats } from "@/lib/cats";
 import { DEFAULT_STONES, stoneTypeOf, type StoneType } from "@/lib/stones";
 import { ALL_RING_STYLES, BAND_STYLES, RING_STYLES, STONE_RING_STYLES, ringStylesFor, type RingStyle } from "@/lib/ring3d";
 
@@ -32,7 +33,7 @@ export default function DesignEditor() {
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get("saved")) setMsg({ t: "ok", m: "Saved. The website shows the new design now." });
     const db = supabaseBrowser();
-    db.from("kraft_categories").select("*").order("sort_order").then(({ data }) => { const c = (data as Category[]) ?? []; setCats(c); if (isNew && c[0]) setD((x) => ({ ...x, category: x.category || c[0].slug })); });
+    db.from("kraft_categories").select("*").order("sort_order").then(({ data }) => { const c = (data as Category[]) ?? []; setCats(c); const first = placeableCats(c)[0]?.items[0]; if (isNew && first) setD((x) => ({ ...x, category: x.category || first.slug })); });
     db.from("kraft_stones").select("*").order("sort_order").then(({ data, error }) => !error && data && setTypes(data as StoneType[]));
     db.from("kraft_settings").select("rates").eq("id", 1).maybeSingle().then(({ data }) => data?.rates && setRates({ ...DEFAULT_RATES, ...data.rates }));
     if (!isNew) db.from("kraft_designs").select("*").eq("id", id).maybeSingle().then(({ data }) => {
@@ -123,7 +124,11 @@ export default function DesignEditor() {
             <div className="field"><label htmlFor="na">Name (Arabic)</label><input id="na" dir="rtl" value={d.name_ar} onChange={(e) => set("name_ar", e.target.value)} /></div>
             <div className="field"><label htmlFor="de">Description (English)</label><textarea id="de" value={d.description_en ?? ""} onChange={(e) => set("description_en", e.target.value)} /></div>
             <div className="field"><label htmlFor="da">Description (Arabic)</label><textarea id="da" dir="rtl" value={d.description_ar ?? ""} onChange={(e) => set("description_ar", e.target.value)} /></div>
-            <div className="field"><label htmlFor="ca">Category</label><select id="ca" value={d.category} onChange={(e) => set("category", e.target.value)}>{cats.map((c) => <option key={c.slug} value={c.slug}>{c.name_en}</option>)}</select></div>
+            <div className="field"><label htmlFor="ca">Category</label><select id="ca" value={d.category} onChange={(e) => set("category", e.target.value)}>{placeableCats(cats).map(({ main, items }) => items[0]?.slug === main.slug
+                ? <option key={main.slug} value={main.slug}>{main.name_en}</option>
+                : <optgroup key={main.slug} label={main.name_en}>{items.map((c) => <option key={c.slug} value={c.slug}>{main.name_en} · {c.name_en}</option>)}</optgroup>)}
+              {d.category && !placeableCats(cats).some((g) => g.items.some((c) => c.slug === d.category)) && cats.some((c) => c.slug === d.category) && <option value={d.category}>{cats.find((c) => c.slug === d.category)?.name_en} (has subcategories: choose one)</option>}
+              </select></div>
             <div className="field"><label htmlFor="sl">Web address <span className="hint">made from the English name if empty</span></label><input id="sl" value={d.slug} onChange={(e) => set("slug", e.target.value)} placeholder={slugify(d.name_en)} /></div>
           </div>
         </section>
