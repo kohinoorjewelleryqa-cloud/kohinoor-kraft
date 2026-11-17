@@ -4,13 +4,14 @@ import { href, pick, t } from "@/lib/i18n";
 import { KARATS } from "@/lib/gold";
 import type { Category, Settings } from "@/lib/types";
 import { mainCats, subCats } from "@/lib/cats";
+import { artSvg, parseArt } from "@/lib/art";
 import { LangSwitch, MobileMenu, type NavGroup } from "./HeaderClient";
 
 export default function Header({ lang, settings, categories = [] }: { lang: Lang; settings: Settings; categories?: Category[] }) {
   const d = t(lang);
   const catHref = (slug: string) => `${href(lang, "/designs")}?cat=${slug}`;
   const groups: NavGroup[] = mainCats(categories).map((m) => ({
-    name: pick(m, "name", lang), href: catHref(m.slug),
+    name: pick(m, "name", lang), href: catHref(m.slug), icon: (() => { const [type, v] = parseArt(m.art); return artSvg(type, "yellow", "none", v); })(),
     subs: subCats(categories, m.slug).map((c) => ({ name: pick(c, "name", lang), href: catHref(c.slug) })),
   }));
   const nav: [string, string][] = [
@@ -34,7 +35,7 @@ export default function Header({ lang, settings, categories = [] }: { lang: Lang
         </div>
       </div>
       <div className="wrap hdr">
-        <MobileMenu lang={lang} items={nav} groups={groups} labels={{ menu: d.menu, close: d.close, viewAll: d.sections.viewAll }} />
+        <MobileMenu lang={lang} items={nav} groups={groups} createHref={href(lang, "/create")} labels={{ menu: d.menu, close: d.close, viewAll: d.sections.viewAll, shop: d.menuShop, more: d.menuMore, start: d.hero.start, brand: d.brandShort, sub: d.brandSub, home: href(lang) }} />
         <Link className="brand" href={href(lang)} aria-label={d.brand}>
           <img src="/logo-mark.webp" alt="" width={41} height={54} />
           <span className="wm"><b>{d.brandShort}</b><span>{d.brandSub}</span></span>

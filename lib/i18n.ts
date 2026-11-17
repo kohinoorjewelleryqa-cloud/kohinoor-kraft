@@ -21,6 +21,8 @@ const en = {
   langSwitch: "العربية",
   menu: "Menu",
   close: "Close",
+  menuShop: "Shop by category",
+  menuMore: "Explore",
   whatsapp: "WhatsApp",
   rateBar: "Today's gold (QAR/g)",
   hero: {
@@ -194,6 +196,8 @@ const ar: Dict = {
   langSwitch: "English",
   menu: "القائمة",
   close: "إغلاق",
+  menuShop: "تسوّق حسب الفئة",
+  menuMore: "اكتشف",
   whatsapp: "واتساب",
   rateBar: "سعر الذهب اليوم (ر.ق/غ)",
   hero: {

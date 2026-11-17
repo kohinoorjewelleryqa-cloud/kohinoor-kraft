@@ -12,9 +12,14 @@ export function LangSwitch({ lang, label }: { lang: Lang; label: string }) {
   return <Link className="lang" href={target} hrefLang={other} lang={other}>{label}</Link>;
 }
 
-export type NavGroup = { name: string; href: string; subs: { name: string; href: string }[] };
+export type NavGroup = { name: string; href: string; icon?: string; subs: { name: string; href: string }[] };
+type MenuLabels = { menu: string; close: string; viewAll: string; shop: string; more: string; start: string; brand: string; sub: string; home: string };
 
-export function MobileMenu({ lang, items, groups = [], labels }: { lang: Lang; items: [string, string][]; groups?: NavGroup[]; labels: { menu: string; close: string; viewAll: string } }) {
+const Chevron = ({ dir = "down" }: { dir?: "down" | "end" }) => (
+  <svg className={`dc-chev ${dir}`} viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+);
+
+export function MobileMenu({ lang, items, groups = [], createHref, labels }: { lang: Lang; items: [string, string][]; groups?: NavGroup[]; createHref: string; labels: MenuLabels }) {
   const [open, setOpen] = useState(false);
   const [exp, setExp] = useState<string | null>(null);
   const path = usePathname();
@@ -26,34 +31,66 @@ export function MobileMenu({ lang, items, groups = [], labels }: { lang: Lang; i
     document.body.style.overflow = "hidden";
     return () => { document.removeEventListener("keydown", k); document.body.style.overflow = ""; };
   }, [open]);
+  const close = () => setOpen(false);
+  const links = items.filter(([h]) => h !== createHref);
   return (
     <>
       <button className="burger" type="button" aria-label={labels.menu} aria-expanded={open} onClick={() => setOpen(true)}>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" strokeWidth="1.8" fill="none" /></svg>
       </button>
       {open && (
-        <div className="drawer-wrap" onClick={() => setOpen(false)}>
+        <div className="drawer-wrap" onClick={close}>
           <nav className="drawer" aria-label={labels.menu} onClick={(e) => e.stopPropagation()} dir={lang === "ar" ? "rtl" : "ltr"}>
-            <button className="drawer-x" type="button" onClick={() => setOpen(false)}>{labels.close}</button>
-            {groups.length > 0 && (
-              <div className="drawer-cats">
-                {groups.map((g) => g.subs.length ? (
-                  <div key={g.href} className="dc-group">
-                    <button type="button" className="dc-head" aria-expanded={exp === g.href} onClick={() => setExp(exp === g.href ? null : g.href)}>
-                      <span>{g.name}</span>
-                      <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" fill="none" stroke="currentColor" strokeWidth="1.4" /></svg>
-                    </button>
-                    {exp === g.href && (
-                      <div className="dc-subs">
-                        {g.subs.map((s) => <Link key={s.href} href={s.href} onClick={() => setOpen(false)}>{s.name}</Link>)}
-                        <Link className="dc-all" href={g.href} onClick={() => setOpen(false)}>{labels.viewAll}</Link>
-                      </div>
-                    )}
-                  </div>
-                ) : <Link key={g.href} className="dc-head" href={g.href} onClick={() => setOpen(false)}>{g.name}</Link>)}
-              </div>
-            )}
-            {items.map(([h, l]) => <Link key={h} href={h} aria-current={path === h ? "page" : undefined}>{l}</Link>)}
+            <div className="drawer-top">
+              <Link className="drawer-brand" href={labels.home} onClick={close}>
+                <img src="/logo-mark.webp" alt="" width={30} height={40} />
+                <span><b>{labels.brand}</b><small>{labels.sub}</small></span>
+              </Link>
+              <button className="drawer-x" type="button" aria-label={labels.close} onClick={close}>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
+              </button>
+            </div>
+            <div className="drawer-body">
+              {groups.length > 0 && (
+                <>
+                  <p className="drawer-label">{labels.shop}</p>
+                  <ul className="drawer-cats">
+                    {groups.map((g) => {
+                      const isOpen = exp === g.href;
+                      const inner = (
+                        <>
+                          <span className="dc-ic" dangerouslySetInnerHTML={{ __html: g.icon ?? "" }} />
+                          <span className="dc-name">{g.name}</span>
+                          <Chevron dir={g.subs.length ? "down" : "end"} />
+                        </>
+                      );
+                      return (
+                        <li key={g.href} className={`dc-group${isOpen ? " open" : ""}`}>
+                          {g.subs.length ? (
+                            <button type="button" className="dc-head" aria-expanded={isOpen} onClick={() => setExp(isOpen ? null : g.href)}>{inner}</button>
+                          ) : (
+                            <Link className="dc-head" href={g.href} onClick={close}>{inner}</Link>
+                          )}
+                          {g.subs.length > 0 && (
+                            <div className="dc-subs" hidden={!isOpen}>
+                              {g.subs.map((s) => <Link key={s.href} href={s.href} onClick={close}>{s.name}</Link>)}
+                              <Link className="dc-all" href={g.href} onClick={close}>{labels.viewAll} <span aria-hidden="true">{lang === "ar" ? "←" : "→"}</span></Link>
+                            </div>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </>
+              )}
+              <p className="drawer-label">{labels.more}</p>
+              <ul className="drawer-links">
+                {links.map(([h, l]) => <li key={h}><Link href={h} onClick={close} aria-current={path === h ? "page" : undefined}>{l}</Link></li>)}
+              </ul>
+            </div>
+            <div className="drawer-foot">
+              <Link className="btn gold drawer-cta" href={createHref} onClick={close}>{labels.start}</Link>
+            </div>
           </nav>
         </div>
       )}
